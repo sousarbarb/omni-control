@@ -31,6 +31,18 @@ const
 type
   TRobotPosData = (pdGT,pdODO);
 
+  TPICtrl = record
+    kc,ti,vdead,vok: double;
+  end;
+
+  TPDCtrl = record
+    kc,td: double;
+  end;
+
+  TRobModel = record
+    kp,tau: double;
+  end;
+
 
 
 { GLOBAL VARIABLES }
@@ -41,8 +53,11 @@ var
   // Robot
   mot_param: TMotorPars;
   mot_fric:  TFrictionDef;
+  mot_ctrl:  TPICtrl;
   vmot, wmot, wmot_r, wmot_e, wmot_eint: array [iMOT1..iMOT3] of double;
   robv, robv_r, robv_pd_r, robv_ff_r: array [1..3] of double; // v,vn,w
+  rob_model : array [1..3] of TRobModel;  // v,vn,w
+  rob_pdctrl: array [1..3] of TPDCtrl;    // v,vn,w
   robp_loc, robp_loc_r, robp_loc_e, robp_loc_eprev, robp_loc_ederiv: array [1..3] of double; // x,y,th
   robd       : array [1..3] of double; // delta_dv,delta_vn,delta_w
   robpodo    : array [1..3] of double; // xodo, yodo, thodo
@@ -109,6 +124,47 @@ end;
 
 
 
+procedure IMCmodelPIctrl(kp,tau,lag,divtau: double; out kcout,tiout: double);
+var
+  taucl: double;
+begin
+  if ((divtau <> 0) AND (tau <> 0) AND (kp <> 0)) then begin
+    taucl := tau/divtau;
+    kcout := (tau/(taucl+lag)) / kp;
+    tiout := tau;
+  end else begin
+    kcout := 0;
+    tiout := 0;
+  end;
+end;
+
+procedure BesselPrototypePDctrl(robMmodel: Matrix; Tsettling: double; besselPoles: Matrix);
+var
+  i: integer;
+  a0,a1,re,im: double;
+begin
+  // Compute the coefficients of the characteristic polynomial (roots' polynomial in closed loop)
+  re := Mgetv(besselPoles,0,0);
+  im := Mgetv(besselPoles,0,1);
+  a0 := ( Sqr(re) + Sqr(im) ) / Sqr(Tsettling);
+  a1 := -2*re/Tsettling;
+  SetRCValue(33,6,Format(PRECISIONFORMAT,[a0]));
+  SetRCValue(34,6,Format(PRECISIONFORMAT,[a1]));
+
+  // Compute the gains for the PD controller
+  for i:=1 to 3 do begin
+    rob_model[i].kp  := Mgetv(robMmodel,0,i-1);
+    rob_model[i].tau := Mgetv(robMmodel,1,i-1);
+    rob_pdctrl[i].kc := a0*rob_model[i].tau/rob_model[i].kp;
+    rob_pdctrl[i].td := (a1*rob_model[i].tau - 1)/(rob_model[i].kp*rob_pdctrl[i].kc);
+    // Debug
+    SetRCValue(33,2+i-1,Format(PRECISIONFORMAT,[rob_pdctrl[i].kc]));
+    SetRCValue(34,2+i-1,Format(PRECISIONFORMAT,[rob_pdctrl[i].td]));
+  end;
+end;
+
+
+
 { CONTROL }
 procedure Control;
 begin
@@ -127,6 +183,8 @@ procedure Initialize;
 begin
   mot_param := GetMotorPars(iROBOT,iMOT1);
   mot_fric  := GetFrictionDef(iROBOT,iMOT1);
+  mot_ctrl.vdead := GetRCValue(22,4);
+  mot_ctrl.vok   := GetRCValue(23,4);
 
   // Reset the kicker
   SetAxisSpring(iROBOT,iKICKER,10,0);
@@ -204,8 +262,11 @@ begin
   SetRCValue(21,2,format(PRECISIONFORMAT,[PI_DIVTAU]));
   SetRCValue(20,4,format(PRECISIONFORMAT,[PI_VDEAD]));
   SetRCValue(21,4,format(PRECISIONFORMAT,[PI_VOK]));
+  IMCmodelPIctrl( GetRCValue(18,2) , GetRCValue(19,2) , GetRCValue(20,2) , GetRCValue(21,2) , mot_ctrl.kc , mot_ctrl.ti );
   SetRCValue(18,3,'kc:');
   SetRCValue(19,3,'ti:');
+  SetRCValue(18,4,format(PRECISIONFORMAT,[mot_ctrl.kc]));
+  SetRCValue(19,4,format(PRECISIONFORMAT,[mot_ctrl.ti]));
   // - robot information (odometry)
   SetRCValue(22,1,'ROBODO');
   SetRCValue(22,2,'(pos):');
@@ -253,4 +314,5 @@ begin
   SetRCValue(34,1,'td:');
   SetRCValue(33,5,'a0:');
   SetRCValue(34,5,'a1:');
+  BesselPrototypePDctrl(RangeToMatrix(27,2,2,3),GetRCValue(30,2),RangeToMatrix(30,5,2,2));
 end;
