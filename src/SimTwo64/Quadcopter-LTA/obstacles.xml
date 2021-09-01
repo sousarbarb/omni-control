@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<obstacles>
+
+
+
+  <!--<cuboid>
+    <size x='1' y='2.0' z='0.5'/>
+    <pos x='-1.8' y='0' z='0'/>
+    <rot_deg x='15' y='0' z='45'/>
+    <color_rgb r='128' g='128' b='128'/>
+  </cuboid>
+    
+   Blimp Bounding Box
+  <cuboid>
+    <imovable/>
+    <size x='0.1' y='0.7' z='1'/>
+    <pos x='0.75' y='-1' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='128' b='0'/>
+  </cuboid>  
+  <cuboid>
+    <imovable/>
+    <size x='0.1' y='0.7' z='1'/>
+    <pos x='-1.18' y='-1' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='128' b='0'/>
+  </cuboid>  
+
+  <cuboid>
+    <imovable/>
+    <size x='2' y='0.1' z='1'/>
+    <pos x='-0.2' y='-0.68' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='128' b='0'/>
+  </cuboid>  
+  <cuboid>
+    <imovable/>
+    <size x='2' y='0.1' z='1'/>
+    <pos x='-0.2' y='-1.32' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='128' b='0'/>
+  </cuboid>-->    
+</obstacles>

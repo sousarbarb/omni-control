@@ -1,0 +1,125 @@
+<?xml version="1.0" ?>
+<robot>
+  <solids>
+    <cylinder>
+      <ID value='Body'/>
+      <mass value='26'/>
+      <!-- size x = sqrt(I*2/m) = sqrt(0.704*2/27) -->
+      <size x='0.2284' z='0.2'/>
+      <pos x='0' y='0' z='0.185'/>
+      <!--<rot_deg x='0' y='0' z='0'/>-->
+      <!--<color_rgb r='128' g='0' b='0'/>-->
+      <texture name='MatFeup' scale='2'/>
+    </cylinder>
+    <cuboid>
+      <ID value='Kicker'/>
+      <mass value='0.1'/>
+      <size x='0.002' y='0.08' z='0.30'/>
+      <pos x='0.25' y='0' z='0.18'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='255' b='0'/>
+    </cuboid>
+  </solids>
+
+  <shells>
+<!-- Pá do Kicker -->
+    <cuboid>
+      <solid id='Kicker'/>
+      <size x='0.04' y='0.08' z='0.01'/>
+      <pos x='0.02' y='0' z='-0.15'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>    
+<!-- Parachoques principais -->
+    <cuboid>
+      <size x='0.01' y='0.355' z='0.08'/>
+      <pos x='0.18' y='0' z='-0.12'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='0' b='255'/>
+    </cuboid>    
+    <cuboid>
+      <size x='0.01' y='0.355' z='0.08'/>
+      <!-- y=-0.18*sin(60) x=-0.18*cos(60) -->
+      <pos x='-0.09' y='0.156' z='-0.12'/>
+      <rot_deg x='0' y='0' z='120'/>
+      <color_rgb r='0' g='0' b='255'/>
+    </cuboid>
+    <cuboid>
+      <size x='0.01' y='0.355' z='0.08'/>
+      <!-- y=0.18*sin(60) x=-0.18*cos(60) -->
+      <pos x='-0.09' y='-0.156' z='-0.12'/>
+      <rot_deg x='0' y='0' z='-120'/>
+      <color_rgb r='0' g='0' b='255'/>
+    </cuboid>
+
+<!-- Parachoques rodas -->
+    <cuboid>
+      <size x='0.01' y='0.13' z='0.08'/>
+      <!-- y=0.24*sin(-60) x=0.24*cos(-60) -->
+      <pos x='0.12' y='0.208' z='-0.12'/>
+      <rot_deg x='0' y='0' z='60'/>
+      <color_rgb r='0' g='0' b='255'/>
+    </cuboid>
+    <cuboid>
+      <size x='0.01' y='0.13' z='0.08'/>
+      <!-- y=-0.24*sin(-60) x=0.24*cos(-60) -->
+      <pos x='0.12' y='-0.208' z='-0.12'/>
+      <rot_deg x='0' y='0' z='-60'/>
+      <color_rgb r='0' g='0' b='255'/>
+    </cuboid>
+    <cuboid>
+      <size x='0.01' y='0.13' z='0.08'/>
+      <pos x='-0.24' y='0' z='-0.12'/>
+      <rot_deg x='0' y='0' z='180'/>
+      <color_rgb r='0' g='0' b='255'/>
+    </cuboid>
+  </shells>
+
+  <articulations>
+    <default>
+      <motor ri='7.6' li='4.88e-3' ki='0.01025' vmax='9' imax='2' active='0'/>
+      <gear ratio='1'/>
+      <friction bv='5e-2' fc='5e-3'/>
+      <encoder ppr='360' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='1' ki='0' kd='0' kf='0.05' active='0' period='10'/>
+    </default>
+
+    <joint>
+      <ID value='KickerAxis'/>
+      <connect B1='Body' B2='Kicker'/>
+      <pos x='0.25' y='0' z='0.38'/>
+      <axis x='0' y='1' z='0'/>
+      <limits Min='-10' Max='90'/>
+      <spring k='10' zeropos='90'/>
+      <type value='Hinge'/>
+      <desc Eng='hinge'/>
+    </joint>
+  </articulations>  
+
+  <wheels>
+    <default>
+      <omni/>
+      <tyre mass='0.565' radius='0.051' width='0.042' centerdist='0.195'/>
+      <motor ri='0.316' ki='0.0302' vmax='24' imax='12' active='1'/>
+      <gear ratio='12'/>
+      <!--<friction bv='0.26' fc='1e-3' coulomblimit='1e-2'/>-->
+      <friction bv='0.001' fc='0.0615' coulomblimit='0.0001'/>
+      <!--<friction bv='0.0097' fc='1e-3' coulomblimit='1e-2'/>-->
+      <encoder ppr='12288' mean='0' stdev='0'/>
+      
+      <!--<controller mode='pidspeed' kp='0.6' ki='0.03' kd='0.0' kf='0.0' active='1' period='10'/>-->
+      <controller mode='pidspeed' kp='0.245' ki='0.0112' kd='0.0' kf='0.0' active='1' period='10'/>
+      <!--<surface mu='1e10' mu2='0.1' softness='0.001'/>-->
+    </default>
+    <wheel>
+      <axis angle='-60'/>
+    </wheel>
+    <wheel>
+      <axis angle='60'/>
+    </wheel>
+    <wheel>
+      <axis angle='180'/>
+    </wheel>
+  </wheels>
+
+</robot>

@@ -1,0 +1,214 @@
+<?xml version="1.0" ?>
+<obstacles>
+  <!--<cuboid>
+    <imovable/>
+    <size x='1' y='2.0' z='0.5'/>
+    <pos x='1.4' y='2' z='0'/>
+    <rot_deg x='15' y='0' z='45'/>
+    <color_rgb r='128' g='128' b='128'/>
+  </cuboid>  -->
+  <!-- Safety Boundary -->
+  <cuboid>
+    <imovable/>
+    <size x='0.1' y='14' z='0.2'/>
+    <pos x='10' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='0' b='0'/>
+  </cuboid>
+  <cuboid>
+    <imovable/>
+    <size x='0.1' y='14' z='0.2'/>
+    <pos x='-10' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='0' b='0'/>
+  </cuboid>
+  <cuboid>
+    <imovable/>
+    <size x='20' y='0.1' z='0.2'/>
+    <pos x='0' y='-7' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='0' b='0'/>
+  </cuboid>
+  <cuboid>
+    <imovable/>
+    <size x='20' y='0.1' z='0.2'/>
+    <pos x='0' y='7' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='0' g='0' b='0'/>
+  </cuboid>
+  
+  <!--Goal '-' -->
+  <cuboid>
+    <imovable/>
+    <size x='0.02' y='2' z='1'/>
+    <pos x='-9.49' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+
+  <cuboid>
+    <imovable/>
+    <size x='0.5' y='0.02' z='1'/>
+    <pos x='-9.25' y='1.01' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <cuboid>
+    <imovable/>
+    <size x='0.5' y='0.02' z='1'/>
+    <pos x='-9.25' y='-1.01' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <cuboid>
+    <imovable/>
+    <size x='0.5' y='2.04' z='0.02'/>
+    <pos x='-9.25' y='0' z='1.01'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <!--Postes-->
+  <cuboid>
+    <imovable/>
+    <size x='0.125' y='0.125' z='1'/>
+    <pos x='-9.0625' y='-1.0625' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <cuboid>
+    <imovable/>
+    <size x='0.125' y='0.125' z='1'/>
+    <pos x='-9.0625' y='1.0625' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  <!--Barra-->
+  <cuboid>
+    <imovable/>
+    <size x='0.125' y='2.250' z='0.125'/>
+    <pos x='-9.0625' y='0' z='1.0625'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <!--Goal '+' -->
+  <cuboid>
+    <imovable/>
+    <size x='0.02' y='2' z='1'/>
+    <pos x='9.49' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+
+  <cuboid>
+    <imovable/>
+    <size x='0.5' y='0.02' z='1'/>
+    <pos x='9.25' y='1.01' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <cuboid>
+    <imovable/>
+    <size x='0.5' y='0.02' z='1'/>
+    <pos x='9.25' y='-1.01' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <cuboid>
+    <imovable/>
+    <size x='0.5' y='2.04' z='0.02'/>
+    <pos x='9.25' y='0' z='1.01'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <!--Postes-->
+  <cuboid>
+    <imovable/>
+    <size x='0.125' y='0.125' z='1'/>
+    <pos x='9.0625' y='-1.0625' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <cuboid>
+    <imovable/>
+    <size x='0.125' y='0.125' z='1'/>
+    <pos x='9.0625' y='1.0625' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <!--Barra-->
+  <cuboid>
+    <imovable/>
+    <size x='0.125' y='2.250' z='0.125'/>
+    <pos x='9.0625' y='0' z='1.0625'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <!--Campos
+  <cuboid>
+    <imovable/>
+    <size x='0.1' y='12' z='0'/>
+    <pos x='9' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  <cuboid>
+    <imovable/>
+    <size x='0.1' y='12' z='0'/>
+    <pos x='-9' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  <cuboid>
+    <imovable/>
+    <size x='18' y='0.1' z='0'/>
+    <pos x='0' y='-6' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  <cuboid>
+    <imovable/>
+    <size x='18' y='0.1' z='0'/>
+    <pos x='0' y='6' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+  
+  <cuboid>
+    <imovable/>
+    <size x='0.1' y='12' z='0'/>
+    <pos x='0' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>   -->
+  
+  
+  
+  
+
+
+  <!--<cuboid>
+    <imovable/>
+    <size x='0.5' y='1.0' z='0.5'/>
+    <pos x='0' y='2' z='0.25'/>
+    <rot_deg x='0' y='0' z='0'/>
+	<color_rgb r='128' g='0' b='0'/>
+  </cuboid>
+  <cuboid>
+    <imovable/>
+    <size x='1' y='2.0' z='0.5'/>
+    <pos x='-1.4' y='2' z='0'/>
+    <rot_deg x='15' y='0' z='45'/>
+    <color_rgb r='128' g='128' b='128'/>
+  </cuboid>  -->
+</obstacles>

@@ -1,0 +1,225 @@
+const NumWheels = 4;
+const NumRobots = 4;
+
+// Global Variables
+var irobot, isensor: integer;
+    t, w: double;
+    lines: TStrings;
+    UDP: TStream;
+    ControlMode: string;
+    kickStartCount: array[0..NumRobots*2-1] of integer;
+    
+procedure Kick(R: LongInt);
+//var v1, v2: double;
+//function  SetAxisSpring(R: LongInt; i: LongInt; k: Double; ZeroPos: Double);
+begin
+  if (kickStartCount[R] > 0) and (kickStartCount[R] < 3) then begin
+    SetAxisSpring(R, 0, 10, 90);
+    kickStartCount[R] := kickStartCount[R] + 1;
+  end else begin
+    SetAxisSpring(R, 0, 1, 0);
+    kickStartCount[R] := 0;
+  end;
+end;
+
+
+procedure KeyControl(v: double);
+var v1, v2: double;
+begin
+
+  v := 10;
+
+  v1 := 0;
+  v2 := 0;
+  if keyPressed(VK_RIGHT) then begin
+    v1 := +1;
+    v2 := -1;
+  end;
+
+  if keyPressed(VK_LEFT) then begin
+    v1 := v1 - 1;
+    v2 := v2 + 1;
+  end;
+
+  if keyPressed(VK_UP) then begin
+    v1 := v1 + 1;
+    v2 := v2 + 1;
+  end;
+
+  if keyPressed(VK_DOWN) then begin
+    v1 := v1 - 1;
+    v2 := v2 - 1;
+  end;
+
+  v1 := v1*v;
+  v2 := v2*v;
+  SetAxisSpeedRef(irobot, 0, -v1);
+  SetAxisSpeedRef(irobot, 1, v2);
+end;
+
+procedure TrackControl(v, k: double);
+var v1, v2, err, ys: double;
+    P: TPoint3D;
+begin
+  P := GetSolidPos(irobot, isensor);
+  if P.y > 0 then begin
+    err := -P.x;
+  end else if P.y > -0.25 then begin
+    err := -P.x + 0.1;
+  end else begin
+    err := -P.x;
+  end;
+  
+  v1 := v - k * err;
+  v2 := v + k * err;
+
+  SetAxisSpeedRef(irobot, 1, v1);
+  SetAxisSpeedRef(irobot, 2, v2);
+end;
+
+
+procedure Control;
+var ref: double;
+    //s: string;
+    s, mess, in_mess: string;
+    sl_mess: TStringList;
+    i, j, mi, r_number:integer;
+begin
+
+
+  if keyPressed(ord('R')) then begin
+    SetRobotPos(irobot, 0, 0.4, 0, 0);
+  end;
+  if keyPressed(ord('K')) then begin
+    for i := 0 to NumRobots-1 do begin
+      kickStartCount[i] := 1;
+    end;
+  end;
+
+  {
+  if keyPressed(ord('S')) then begin
+    ControlMode := 'keys';
+  end else if keyPressed(ord('T')) then begin
+    ControlMode := 'track';
+  end else begin
+    //ControlMode := 'keys';
+  end;
+
+  if ControlMode = 'keys' then begin
+    KeyControl(10);
+  end;
+
+  t := t + 0.04;
+  if w*t >= 2*pi then begin
+    t := t - 2*pi/w;
+  end;
+  
+  if controlMode = 'track' then begin
+    TrackControl(10, 150);
+  end;
+  }
+  //SetAxisSpeedRef(irobot, 0, 0);
+  //SetAxisSpeedRef(irobot, 1, 0);
+  //KeyControl(10);
+  
+  for r_number:=0 to NumRobots-1 do begin
+    kick(r_number);
+    //robot number   (0)
+    mess := inttostr(r_number);
+    //robot position (1,2,3)
+    mess:=mess+#10+floattostr(GetRobotX(r_number))+#10+floattostr(GetRobotY(r_number))+#10+floattostr(GetRobotTheta(r_number));
+    //robot odometry (4,5,6)
+    mess:=mess+#10+inttostr(GetAxisOdo(r_number, 0)) + #10 + inttostr(GetAxisOdo(r_number, 1)) + #10 + inttostr(GetAxisOdo(r_number, 2));
+    //ball position (7,8)
+    //mess := mess + #10 + floattostr(GetRobotX(10))+#10+floattostr(GetRobotY(10));
+    mess := mess + #10 + floattostr(GetRobotX(4))+#10+floattostr(GetRobotY(4));
+    //mess := mess + #10 + floattostr(GetRobotX(1))+#10+floattostr(GetRobotY(1));
+    //WriteUDPData('192.168.106.54', 9810, mess);
+    //WriteUDPData('172.16.33.10'+inttostr(r_number+1), 9810, mess);
+    WriteUDPData('172.16.33.105', 9810+r_number+1,mess);
+   //WriteUDPData('172.16.33.105', 9810+r_number+1,mess);
+  end;
+
+  {for r_number:=0 to NumRobots-1 do begin
+    kick(r_number+5);
+    //robot number   (0)
+    mess := inttostr(r_number);
+    //robot position (1,2,3)
+    mess:=mess+#10+floattostr(GetRobotX(r_number+5))+#10+floattostr(GetRobotY(r_number+5))+#10+floattostr(GetRobotTheta(r_number+5));
+    //robot odometry (4,5,6)
+    mess:=mess+#10+inttostr(GetAxisOdo(r_number+5, 0)) + #10 + inttostr(GetAxisOdo(r_number+5, 1)) + #10 + inttostr(GetAxisOdo(r_number+5, 2));
+    //ball position (7,8)
+    mess := mess + #10 + floattostr(GetRobotX(10))+#10+floattostr(GetRobotY(10));
+    //WriteUDPData('192.168.106.54', 9810, mess);
+    //WriteUDPData('172.16.33.10'+inttostr(r_number+1), 9810, mess);
+    WriteUDPData('172.16.33.101', 9810+r_number+1,mess);
+  end;}
+  
+  mess := ReadUDPData();
+
+  
+  if mess <> '' then begin
+    sl_mess :=TStringlist.create;
+    sl_mess.text := mess;
+
+   // writeln(inttostr(sl_mess.count)+'   '+mess);
+    for i:=0 to sl_mess.count-1 do begin
+      //writeln(inttostr(sl_mess.count)+'   '+ inttostr( r_number)+'   '+mess);
+      if sl_mess[i] = chr(35) then begin
+        if i+4< sl_mess.count then begin
+          r_number:=strtoint(sl_mess[i+1]);
+          SetAxisSpeedRef(r_number, 1, strtointdef(sl_mess[i+2],0)*0.009);
+          SetAxisSpeedRef(r_number, 2, strtointdef(sl_mess[i+3],0)*0.009);
+          SetAxisSpeedRef(r_number, 3, strtointdef(sl_mess[i+4],0)*0.009);
+          if strtoint(sl_mess[i+5])>0 then
+            kickStartCount[r_number]:=1
+          else
+            kickStartCount[r_number]:=0;
+          //writeln(sl_mess[i]+';'+sl_mess[i+1]+';'+sl_mess[i+2]+';'+sl_mess[i+3]+';'+sl_mess[i+4]+';'+sl_mess[i+5]);
+          if r_number>9 then begin
+            sl_mess.free;
+            exit;
+          end;
+        end;
+      end;
+    end;
+    sl_mess.free;
+  end;
+
+  
+  //s := ReadUDPData;
+  //if s <> '' then writeln(s);
+  //writeln(ReadUDPData);
+ //SetRobotVoltageRef(1);
+ //s:=  ReadComPort;
+ //writeComPort(' dcd');
+ //SetRobotVoltageRef(5*(2 - GetRobotX(irobot) ));
+ //SetRobotVoltageRef(1*sin(w*t));
+ //SetRobotVoltageRef(1*sign(sin(w*t)));
+ // writeln(floattostr(elapsed_time)+' '+floattostr(estado_m.pos)+' '+floattostr(estado_m.vel));
+  
+end;
+
+
+procedure Initialize;
+var
+  i:integer;
+begin
+  irobot := 0;
+  isensor := GetSolidIndex(irobot, 'NXTLightSensor');
+  
+  t := 0;
+  w := 1;
+  for i:=0 to NumRobots-1 do begin
+    kickStartCount[i] := 0;
+  end;
+
+  
+  ControlMode := 'keys';
+  //StartSolidFire(0,1);
+  //startFire;
+  //WriteUDPData('127.0.0.1', 9808, 'ola');
+  //lines := TStrings.create;
+  //SetThingColor(1,0,0,0,255);
+  //SetSolidColor(0,0,0,0,255);
+end;

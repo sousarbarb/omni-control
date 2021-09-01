@@ -1,0 +1,257 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='quadcopter'/>
+  <defines>
+    <const name='arm_length' value='0.4' />
+    <const name='propeller_z' value='0.01' />
+    <const name='propeller_length' value='0.10' />
+    <const name='propeller_thrust' value='0.15' />
+  </defines>
+
+  <solids>
+     <!--
+     <sphere>                                                              SetRCValue(4,2,FloatToStr(v));
+      <ID value='K5'/>
+      <mass value='1'/>
+      <buoyant mass='-0.8' x='0' z='0.05'/>
+      <drag coefficient='5' roll='0.01'/>
+      <radius value='0.2'/>
+      <pos x='0' y='0' z='2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='255' g='255' b='255'/>
+    <sphere>    
+                
+  
+    <cuboid>
+      <ID value='haste0'/>
+      <mass value='1'/>
+      <size x='0.01' y='arm_length' z='0.01'/>
+      <pos x='0' y='arm_length/2' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>   
+    
+    <cuboid>
+      <ID value='haste1'/>
+      <mass value='1'/>
+      <size x='0.01' y='arm_length' z='0.01'/>
+      <pos x='0' y='arm_length/2' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='haste2'/>
+      <mass value='1'/>
+      <size x='0.01' y='arm_length' z='0.01'/>
+      <pos x='0' y='arm_length/2' z='0'/>
+      <rot_deg x='0' y='90' z='0'/>       calc_v
+      <color_rgb r='0' g='128' b='0'/>desiredZ
+
+    <cuboid>
+      <ID value='haste3'/>
+      <mass value='1'/>
+      <size x='0.01' y='arm_length' z='0.01'/>
+      <pos x='0' y='arm_length/2' z='0'/>
+      <rot_deg x='0' y='90' z='0'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>    
+                   -->
+    <sphere>
+      <ID value='S2'/>
+      <mass value='1'/>
+      <nobuoyant mass='-0.8' x='0' z='1'/>
+      <drag coefficient='5' roll='0.01'/>
+      <radius value='0.01'/>
+      <pos x='0' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='255' g='255' b='255'/>
+    </sphere>    
+
+
+    <propeller>
+      <ID value='P0'/>
+      <mesh file='propeller.3ds' scale='1.5'  shadow='0'/>
+      <mass value='0.05'/>
+      <drag coefficient='1' roll='0'/>
+      <thrust coefficient='propeller_thrust'/>
+      <size x='0.005' y='propeller_length' z='0.005'/>
+      <pos x='arm_length' y='0.0' z='propeller_z'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </propeller>
+
+    <propeller>
+      <ID value='P1'/>
+      <mesh file='propeller.3ds' scale='1.5'  shadow='0'/>
+      <mass value='0.05'/>
+      <drag coefficient='1' roll='0'/>
+      <thrust coefficient='-propeller_thrust'/>
+      <size x='0.005' y='propeller_length' z='0.005'/>
+      <pos x='0' y='arm_length' z='propeller_z'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </propeller>    
+    <propeller>
+      <ID value='P2'/>
+      <mesh file='propeller.3ds' scale='1.5'  shadow='0'/>
+      <mass value='0.05'/>
+      <drag coefficient='1' roll='0'/>
+      <thrust coefficient='propeller_thrust'/>
+      <size x='0.005' y='propeller_length' z='0.005'/>
+      <pos x='-arm_length' y='0' z='propeller_z'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </propeller>    
+    
+    <propeller>
+      <ID value='P3'/>
+      <mesh file='propeller.3ds' scale='1.5'  shadow='0'/>
+      <mass value='0.05'/>
+      <drag coefficient='1' roll='0'/>
+      <thrust coefficient='-propeller_thrust'/>
+      <size x='0.005' y='propeller_length' z='0.005'/>
+      <pos x='0' y='-arm_length' z='propeller_z'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </propeller>
+
+    
+    
+  </solids>
+
+  <articulations>
+    <default>
+      <motor ri='1' ki='1.2e-3' vmax='9' imax='10' active='1'/>
+      <gear ratio='100'/>
+      <friction bv='1e-5' fc='1e-5' />
+      <encoder ppr='1000' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='20' ki='1' kd='0' kf='0.05' active='0' period='10'/>
+    </default>     
+
+    <!--<joint>
+      <ID value='JH0'/>
+      <pos x='0' y='0' z='0'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='haste0' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>
+
+     <joint>
+      <ID value='JH1'/>
+      <pos x='0' y='0' z='0'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='haste1' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>
+    
+
+    <joint>
+      <ID value='JH2'/>
+      <pos x='0' y='0' z='0'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='haste2' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>        
+                                                                    if der_zError < 0 Then
+  begin
+    calc_v := calc_v + zError * calc_v;
+  end;
+    <joint>
+      <ID value='JH3'/>
+      <pos x='0' y='0' z='0'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='haste3' B2='S2'/>
+      <type value='Hinge'/>                       
+    </joint>   
+            -->
+    <joint>
+      <ID value='JP0'/>
+      <pos x='arm_length' y='0' z='propeller_z'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='P0' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>
+    <joint>
+      <ID value='JP1'/>
+      <pos x='0' y='arm_length' z='propeller_z'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='P1' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>
+    <joint>
+      <ID value='JP2'/>
+      <pos x='-arm_length' y='0' z='propeller_z'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='P2' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>
+    <joint>
+      <ID value='JP3'/>
+      <pos x='0' y='-arm_length' z='propeller_z'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='P3' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='JPC'/>
+      <pos x='0' y='0' z='0.1 + propeller_z'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='PC' B2='S2'/>
+      <type value='Hinge'/>
+    </joint>
+
+
+  </articulations>                                                         
+
+  <shells>
+  
+    <cuboid>
+      <ID value='haste0'/>
+      <mass value='0.01'/>
+      <size x='0.01' y='arm_length' z='0.01'/>                  
+      <pos x='0' y='arm_length/2' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>   
+    
+    <cuboid>
+      <ID value='haste1'/>
+      <mass value='0.01'/>
+      <size x='0.01' y='arm_length' z='0.01'/>
+      <pos x='-arm_length/2' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='90'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>       
+
+
+    <cuboid>
+      <ID value='haste2'/>
+      <mass value='0.01'/>
+      <size x='0.01' y='arm_length' z='0.01'/>
+      <pos x='0' y='-arm_length/2' z='0'/>
+      <rot_deg x='0' y='0' z='180'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>   
+
+    <cuboid>
+      <ID value='haste3'/>
+      <mass value='0.01'/>
+      <size x='0.01' y='arm_length' z='0.01'/>
+      <pos x='arm_length/2' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='270'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>       
+    
+    
+  
+    <nocuboid>
+      <ID value='S3'/>
+      <size x='0.004' y='0.21' z='0.004'/>
+      <pos x='-0.117' y='0.0' z='0.015'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='100' g='0' b='00'/>
+    </nocuboid>
+  </shells>
+</robot>
