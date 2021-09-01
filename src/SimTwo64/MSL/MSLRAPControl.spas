@@ -1,0 +1,256 @@
+{ CONSTANTS / DEFINES }
+const
+  DOUBLEFORMAT = '%.5g';
+  PRECISIONFORMAT = '%.12g';
+  // Robot
+  ROBOT_WH_D = 0.102;
+  ROBOT_L    = 0.195;
+  iROBOT  = 0;
+  iKICKER = 0;
+  iMOT1  = 1;
+  iMOT2  = 2;
+  iMOT3  = 3;
+  ENCRES = 12288;
+  PI_KP  = 2.737441777222;
+  PI_TAU = 0.208736119092;
+  PI_LAG = 0.00;
+  PI_DIVTAU = 1.5;
+  PI_VDEAD = 1.0;
+  PI_VOK   = 1.5;
+  PD_KP_X  = 1.0;
+  PD_KP_Y  = 1.0;
+  PD_KP_TH = 1.0;
+  PD_TAU_X  = 0.129073;
+  PD_TAU_Y  = 0.128070;
+  PD_TAU_TH = 0.099488;
+  PD_TSETT = 0.8;
+
+
+
+{ TYPES DEFINITION }
+type
+  TRobotPosData = (pdGT,pdODO);
+
+
+
+{ GLOBAL VARIABLES }
+var
+  Tscript, time_var: double;
+  robpData: TRobotPosData;
+
+  // Robot
+  mot_param: TMotorPars;
+  mot_fric:  TFrictionDef;
+  vmot, wmot, wmot_r, wmot_e, wmot_eint: array [iMOT1..iMOT3] of double;
+  robv, robv_r, robv_pd_r, robv_ff_r: array [1..3] of double; // v,vn,w
+  robp_loc, robp_loc_r, robp_loc_e, robp_loc_eprev, robp_loc_ederiv: array [1..3] of double; // x,y,th
+  robd       : array [1..3] of double; // delta_dv,delta_vn,delta_w
+  robpodo    : array [1..3] of double; // xodo, yodo, thodo
+  robpgt     : array [1..3] of double; // xgt , ygt , thgt
+  robp,robp_r: array [1..3] of double; // x   , y   , th
+  robp_r_1deriv,robp_r_2deriv: array [1..3] of double;         // x   , y   , th
+  robp_loc_r_1deriv,robp_loc_r_2deriv: array [1..3] of double; // x   , y   , th
+
+
+
+procedure UpdateRobotInfo;
+var
+  i: integer;
+begin
+  // - angular velocity
+  for i := iMOT1 to iMOT3 do begin
+    wmot[i] := 2*pi*GetAxisOdo(iROBOT,i)/(Tscript*ENCRES);
+  end;
+  // - robot velocity
+  robv[1] := -( -wmot[iMOT1] + wmot[iMOT2]                 ) * Sqrt(3) * ROBOT_WH_D / 6;
+  robv[2] := -( -wmot[iMOT1] - wmot[iMOT2] + 2*wmot[iMOT3] )           * ROBOT_WH_D / 6;
+  robv[3] := -( -wmot[iMOT1] - wmot[iMOT2] -   wmot[iMOT3] )           * ROBOT_WH_D / (6 * ROBOT_L);
+  // - robot displacement (local frame)
+  for i:= 1 to 3 do begin
+    robd[i] := robv[i] * Tscript;
+  end;
+  // - odometry
+  if (robv[3] = 0) then begin
+    robpodo[1] := robpodo[1] + robd[1]*cos(robpodo[3]) - robd[2]*sin(robpodo[3]);
+    robpodo[2] := robpodo[2] + robd[1]*sin(robpodo[3]) + robd[2]*cos(robpodo[3]);
+  end else begin
+    robpodo[1] := robpodo[1] + (
+                                 ( robd[1]*sin(robd[3])     + robd[2]*(cos(robd[3])-1) ) * cos( robpodo[3] + robd[3]/2 ) -
+                                 ( robd[1]*(1-cos(robd[3])) + robd[2]*sin(robd[3])     ) * sin( robpodo[3] + robd[3]/2 )
+                               ) / robd[3];
+    robpodo[2] := robpodo[2] + (
+                                 ( robd[1]*sin(robd[3])     + robd[2]*(cos(robd[3])-1) ) * sin( robpodo[3] + robd[3]/2 ) +
+                                 ( robd[1]*(1-cos(robd[3])) + robd[2]*sin(robd[3])     ) * cos( robpodo[3] + robd[3]/2 )
+                               ) / robd[3];
+  end;
+  robpodo[3] := NormalizeAngle(robpodo[3] + robd[3]);
+  // - ground-truth
+  robpgt[1] := GetRobotX(iROBOT);
+  robpgt[2] := GetRobotY(iROBOT);
+  robpgt[3] := GetRobotTheta(iROBOT);
+  // - local frame
+  case (robpData) of
+    pdGT: begin
+      for i:= 1 to 3 do begin
+        robp[i] := robpgt[i];
+      end;
+    end;
+
+    pdODO: begin
+      for i:= 1 to 3 do begin
+        robp[i] := robpodo[i];
+      end;
+    end;
+  end;
+  robp_loc[1] :=  robp[1]*cos(robp[3]) + robp[2]*sin(robp[3]);
+  robp_loc[2] := -robp[1]*sin(robp[3]) + robp[2]*cos(robp[3]);
+  robp_loc[3] :=  robp[3];
+end;
+
+
+
+{ CONTROL }
+procedure Control;
+begin
+  Tscript  := ScriptPeriod;
+  time_var := time_var + Tscript;
+
+  // Initialization
+  UpdateRobotInfo;
+
+end;
+
+
+
+{ INITIALIZATION }
+procedure Initialize;
+begin
+  mot_param := GetMotorPars(iROBOT,iMOT1);
+  mot_fric  := GetFrictionDef(iROBOT,iMOT1);
+
+  // Reset the kicker
+  SetAxisSpring(iROBOT,iKICKER,10,0);
+
+  // Reset motors controller
+  SetMotorControllerState(iROBOT,iMOT1,false);
+  SetMotorControllerState(iROBOT,iMOT2,false);
+  SetMotorControllerState(iROBOT,iMOT3,false);
+
+  // Initial mode
+  //ctrlMode := cmRobP;
+  //SetRCValue(2,8,'cmRobP');
+  //robpCtrlMode := pcmTXT;
+  //ConfigureRobP;
+
+  // Reset sheet 
+  // - robot information (position, velocity)
+  SetRCValue(1,1,'ROBOT');
+  SetRCValue(1,2,'INFO');
+  SetRCValue(2,1,'POSVEL');
+  SetRCValue(3,1,'x(m):');
+  SetRCValue(4,1,'y(m):');
+  SetRCValue(5,1,'th(º):');
+  SetRCValue(2,2,'(pos):');
+  SetRCValue(3,3,'vx(m/s):');
+  SetRCValue(4,3,'vy(m/s):');
+  SetRCValue(5,3,'w(rad/s):');
+  SetRCValue(2,4,'(GobV):');
+  SetRCValue(3,5,'v(m/s):');
+  SetRCValue(4,5,'vn(m/s):');
+  SetRCValue(5,5,'w(rad/s):');
+  SetRCValue(2,6,'(RobV):');
+  // - motors information (odo, velocity, inputs controls)
+  SetRCValue(6 ,1,'MOTORS');
+  SetRCValue(7 ,1,'odo:');
+  SetRCValue(8 ,1,'w_m:');
+  SetRCValue(9 ,1,'w_s2:');
+  SetRCValue(10,1,'(v-ri)/k:');
+  SetRCValue(11,1,'v:');
+  SetRCValue(12,1,'i:');
+  SetRCValue(6 ,2,'(1):');
+  SetRCValue(6 ,3,'(2):');
+  SetRCValue(6 ,4,'(3):');
+  SetRCValue(7 ,5,'(tks/cyc)');
+  SetRCValue(8 ,5,'(rad/s)');
+  SetRCValue(9 ,5,'(rad/s)');
+  SetRCValue(10,5,'(rad/s)');
+  SetRCValue(11,5,'(V)');
+  SetRCValue(12,5,'(A)');
+  // - motors parameters (simulation, controller)
+  SetRCValue(13,1,'ri(ohm):');
+  SetRCValue(14,1,'ki(Nm/A):');
+  SetRCValue(15,1,'vmax(V):');
+  SetRCValue(16,1,'imax(A):');
+  SetRCValue(13,3,'n(n:1):');
+  SetRCValue(14,3,'bv:');
+  SetRCValue(15,3,'fc:');
+  SetRCValue(13,2,format(PRECISIONFORMAT,[mot_param.ri]));
+  SetRCValue(14,2,format(PRECISIONFORMAT,[mot_param.ki]));
+  SetRCValue(15,2,format(PRECISIONFORMAT,[mot_param.vmax]));
+  SetRCValue(16,2,format(PRECISIONFORMAT,[mot_param.imax]));
+  SetRCValue(13,4,format(PRECISIONFORMAT,[mot_param.gearRatio]));
+  SetRCValue(14,4,format(PRECISIONFORMAT,[mot_fric.bv]));
+  SetRCValue(15,4,format(PRECISIONFORMAT,[mot_fric.fc]));
+  SetRCValue(17,1,'MOTPI');
+  SetRCValue(18,1,'kp:');
+  SetRCValue(19,1,'tau:');
+  SetRCValue(20,1,'lag:');
+  SetRCValue(21,1,'divtau:');
+  SetRCValue(20,3,'vdead:');
+  SetRCValue(21,3,'vok:');
+  SetRCValue(18,2,format(PRECISIONFORMAT,[PI_KP ]));
+  SetRCValue(19,2,format(PRECISIONFORMAT,[PI_TAU]));
+  SetRCValue(20,2,format(PRECISIONFORMAT,[PI_LAG]));
+  SetRCValue(21,2,format(PRECISIONFORMAT,[PI_DIVTAU]));
+  SetRCValue(20,4,format(PRECISIONFORMAT,[PI_VDEAD]));
+  SetRCValue(21,4,format(PRECISIONFORMAT,[PI_VOK]));
+  SetRCValue(18,3,'kc:');
+  SetRCValue(19,3,'ti:');
+  // - robot information (odometry)
+  SetRCValue(22,1,'ROBODO');
+  SetRCValue(22,2,'(pos):');
+  SetRCValue(23,1,'x(m):');
+  SetRCValue(24,1,'y(m):');
+  SetRCValue(25,1,'th(º):');
+  SetRCValue(23,3,'dx(m):');
+  SetRCValue(24,3,'dy(m):');
+  SetRCValue(25,3,'dth(º):');
+  SetRCValue(22,4,'(dpos):');
+  SetRCValue(23,5,'v(m/s):');
+  SetRCValue(24,5,'vn(m/s):');
+  SetRCValue(25,5,'w(rad/s):');
+  SetRCValue(22,6,'(RobV):');
+  // - pd controller
+  SetRCValue(26,1,'PDCTRL');
+  SetRCValue(26,2,'(v):');
+  SetRCValue(26,3,'(vn):');
+  SetRCValue(26,4,'(w):');
+  SetRCValue(27,1,'kp:');
+  SetRCValue(27,2,format(PRECISIONFORMAT,[PD_KP_X ]));
+  SetRCValue(27,3,format(PRECISIONFORMAT,[PD_KP_Y ]));
+  SetRCValue(27,4,format(PRECISIONFORMAT,[PD_KP_TH]));
+  SetRCValue(28,2,format(PRECISIONFORMAT,[PD_TAU_X ]));
+  SetRCValue(28,3,format(PRECISIONFORMAT,[PD_TAU_Y ]));
+  SetRCValue(28,4,format(PRECISIONFORMAT,[PD_TAU_TH]));
+  SetRCValue(30,2,format(PRECISIONFORMAT,[PD_TSETT]));
+  SetRCValue(28,1,'tau(s):');
+  SetRCValue(29,5,'(Re):');
+  SetRCValue(29,6,'(Im):');
+  SetRCValue(30,1,'Tsett(s):');
+  SetRCValue(30,4,'Bessel:');
+  SetRCValue(30,5,'-4.0530');
+  SetRCValue(31,5,'-4.0530');
+  SetRCValue(31,4,'poles:');
+  SetRCValue(30,6,'2.3400');
+  SetRCValue(31,6,'-2.3400');
+  SetRCValue(32,1,'PDctrl');
+  SetRCValue(32,2,'(v):');
+  SetRCValue(32,3,'(vn):');
+  SetRCValue(32,4,'(w):');
+  SetRCValue(32,5,'s^2 + a1');
+  SetRCValue(32,6,'*s + a0');
+  SetRCValue(33,1,'kc:');
+  SetRCValue(34,1,'td:');
+  SetRCValue(33,5,'a0:');
+  SetRCValue(34,5,'a1:');
+end;
