@@ -2,10 +2,12 @@
 const
   DOUBLEFORMAT = '%.5g';
   PRECISIONFORMAT = '%.12g';
+  FREQDIVPOSCTRL = 4;  // Only executes the positioning controller after FREQDIVPOSCTRL * Tscript
   // Robot
   ROBOT_WH_D = 0.102;
   ROBOT_L    = 0.195;
   iROBOT  = 0;
+  NUM_MOT = 3;
   iKICKER = 0;
   iMOT1  = 1;
   iMOT2  = 2;
@@ -24,6 +26,8 @@ const
   PD_TAU_Y  = 0.128070;
   PD_TAU_TH = 0.099488;
   PD_TSETT = 0.8;
+  // Trajectory (DO NOT CHANGE THIS PARAMETERS)
+  NFUTURE = 5;
 
 
 
@@ -47,10 +51,13 @@ type
 
 { GLOBAL VARIABLES }
 var
+  chart_on, log_on, debug_on: boolean;
   Tscript, time_var: double;
+  Log: TStringList;
   robpData: TRobotPosData;
 
   // Robot
+  ctrlff_on: boolean;
   mot_param: TMotorPars;
   mot_fric:  TFrictionDef;
   mot_ctrl:  TPICtrl;
@@ -65,6 +72,12 @@ var
   robp,robp_r: array [1..3] of double; // x   , y   , th
   robp_r_1deriv,robp_r_2deriv: array [1..3] of double;         // x   , y   , th
   robp_loc_r_1deriv,robp_loc_r_2deriv: array [1..3] of double; // x   , y   , th
+  // Trajectory
+  trajectory_on: boolean;
+  i_global: integer;
+  t_global, u_ref: double;
+  matX_acc, matXinv_acc, matXtX_acc, matXtXinv_acc: Matrix;  // (to compute the acceleration)
+  matX_vel, matXinv_vel, matXtX_vel, matXtXinv_vel: Matrix;  // (to compute the velocity)
 
 
 
@@ -122,6 +135,42 @@ begin
   robp_loc[3] :=  robp[3];
 end;
 
+procedure ShowRobotInfo;
+var
+  i: integer;
+begin
+  // - robot information:
+  SetRCValue(3,2,format(DOUBLEFORMAT,[ robpgt[1]      ]));
+  SetRCValue(4,2,format(DOUBLEFORMAT,[ robpgt[2]      ]));
+  SetRCValue(5,2,format(DOUBLEFORMAT,[ Deg(robpgt[3]) ]));
+  SetRCValue(3,4,format(DOUBLEFORMAT,[ GetRobotVx(iROBOT) ]));
+  SetRCValue(4,4,format(DOUBLEFORMAT,[ GetRobotVy(iROBOT) ]));
+  SetRCValue(5,4,format(DOUBLEFORMAT,[ GetRobotW(iROBOT)  ]));
+  SetRCValue(3,6,format(DOUBLEFORMAT,[  GetRobotVx(iROBOT)*cos(GetRobotTheta(iROBOT)) + GetRobotVy(iROBOT)*sin(GetRobotTheta(iROBOT)) ]));
+  SetRCValue(4,6,format(DOUBLEFORMAT,[ -GetRobotVx(iROBOT)*sin(GetRobotTheta(iROBOT)) + GetRobotVy(iROBOT)*cos(GetRobotTheta(iROBOT)) ]));
+  SetRCValue(5,6,format(DOUBLEFORMAT,[ GetRobotW(iROBOT)                                                                              ]));
+  // - motors information:
+  for i:=0 to NUM_MOT-1 do begin
+    SetRCValue(7 , 2+i ,format('%d',[ GetAxisOdo(iROBOT, i+iMOT1 ) ]));
+    SetRCValue(8 , 2+i ,format(DOUBLEFORMAT,[ 2*pi*GetAxisOdo(iROBOT, i+iMOT1 )/(Tscript*ENCRES) ]));
+    SetRCValue(9 , 2+i ,format(DOUBLEFORMAT,[ GetAxisSpeed(iROBOT, i+iMOT1 ) ]));
+    SetRCValue(10, 2+i ,format(DOUBLEFORMAT,[ (GetAxisU(iROBOT, i+iMOT1 ) - mot_param.ri*GetAxisI(iROBOT, i+iMOT1 )) / (mot_param.ki) ]));
+    SetRCValue(11, 2+i ,format(DOUBLEFORMAT,[ GetAxisU(iROBOT, i+iMOT1 ) ]));
+    SetRCValue(12, 2+i ,format(DOUBLEFORMAT,[ GetAxisI(iROBOT, i+iMOT1 ) ]));
+  end;
+  // - robot odometry information
+  for i:=0 to 2 do begin
+    if (i = 2) then begin
+      SetRCValue(23+i,2,format(DOUBLEFORMAT,[ Deg(robpodo[i+1]) ]));
+      SetRCValue(23+i,4,format(DOUBLEFORMAT,[ Deg(robd[i+1])    ]));
+    end else begin
+      SetRCValue(23+i,2,format(DOUBLEFORMAT,[ robpodo[i+1] ]));
+      SetRCValue(23+i,4,format(DOUBLEFORMAT,[ robd[i+1]    ]));
+    end;
+    SetRCValue(23+i,6,format(DOUBLEFORMAT,[ robv[i+1] ]));
+  end;
+end;
+
 
 
 procedure IMCmodelPIctrl(kp,tau,lag,divtau: double; out kcout,tiout: double);
@@ -165,6 +214,150 @@ end;
 
 
 
+procedure ConfigureLog;
+var
+  string_log: String;
+begin
+  log_on := true;
+  if (Log <> nil) then begin
+    Log.Clear;
+    Log.Free;
+  end;
+  SetRCValue(2,12,'');
+  Log := TStringList.Create;
+  // - metadata
+  Log.Add('METADATA,');
+  Log.Add(',Tscript (s),wmax (bool),wmax (rad/s),L (m),wh D (m),ctrlMode,robpCtrlMode,FREQDIVPOSCTRL,feed-forward (bool),');
+  string_log := '';
+  string_log := string_log + Format('General,%g,',[Tscript*1.0]);
+  string_log := string_log + 'OFF,';
+  string_log := string_log + Format('%g,%g,%g,',[0.0,ROBOT_L*1.0,ROBOT_WH_D*1.0]);
+  string_log := string_log + 'cmRobP,';
+  string_log := string_log + 'pcmTXT,';
+  string_log := string_log + Format('%d,',[FREQDIVPOSCTRL]);
+  if (ctrlff_on) then begin
+    string_log := string_log + 'ON,';
+  end else begin
+    string_log := string_log + 'OFF,';
+  end;
+  Log.Add(string_log);
+  Log.Add(',ri (ohm),ki (Nm/A),vmax (V),imax (A),n:1 (gear),bv (dynamic),fc (static),kc (V / rad/s),ti (s),');
+  Log.Add(Format('Motor,%g,%g,%g,%g,%g,%g,%g,%g,%g,',[mot_param.ri,mot_param.ki,mot_param.vmax,mot_param.imax,mot_param.gearRatio,mot_fric.bv,mot_fric.fc,mot_ctrl.kc,mot_ctrl.ti]));
+  Log.Add('Robot,(v):,(vn):,(w):,');
+  Log.Add(Format('kp,%g,%g,%g,',[rob_model[1].kp,rob_model[2].kp,rob_model[3].kp]));
+  Log.Add(Format('tau (s),%g,%g,%g,',[rob_model[1].tau,rob_model[2].tau,rob_model[3].tau]));
+  Log.Add(Format('kc,%g,%g,%g,',[rob_pdctrl[1].kc,rob_pdctrl[2].kc,rob_pdctrl[3].kc]));
+  Log.Add(Format('td (s),%g,%g,%g,',[rob_pdctrl[1].td,rob_pdctrl[2].td,rob_pdctrl[3].td]));
+  Log.Add(',Filename,Nfuture,Npoly,Nudiv,');
+  Log.Add(Format('pcmTxt,%s,%d,%d,%d,',[GetRCText(17,9),NFUTURE,2,0]));
+  // - information header
+  Log.Add('DATA,');
+  string_log := '';
+  string_log := string_log + 'time (s),time w/ T*4 (s),traj (bool),';
+  string_log := string_log + 'v_m1 (V),v_m2 (V),v_m3 (V),';
+  string_log := string_log + 'odo_m1 (tcks/cyc),odo_m2 (tcks/cyc),odo_m3 (tcks/cyc),';
+  string_log := string_log + 'w_m1 (rad/s),w_m2 (rad/s),w_m3 (rad/s),';
+  string_log := string_log + 'w_r_m1 (rad/s),w_r_m2 (rad/s),w_r_m3 (rad/s),';
+  string_log := string_log + 'w_e_m1 (rad/s),w_e_m2 (rad/s),w_e_m3 (rad/s),';
+  string_log := string_log + 'w_eint_m1 (rad/s),w_eint_m2 (rad/s),w_eint_m3 (rad/s),';
+  string_log := string_log + 'v_rob (m/s),vn_rob (m/s),w_rob (rad/s),';
+  string_log := string_log + 'v_r_rob (m/s),vn_r_rob (m/s),w_r_rob (rad/s),';
+  string_log := string_log + 'v_pd_r_rob (m/s),vn_pd_r_rob (m/s),w_pd_r_rob (rad/s),';
+  string_log := string_log + 'v_ff_r_rob (m/s),vn_ff_r_rob (m/s),w_ff_r_rob (rad/s),';
+  string_log := string_log + 'px_loc (m),py_loc (m),pth_loc (rad),';
+  string_log := string_log + 'px_r_loc (m),py_r_loc (m),pth_r_loc (rad),';
+  string_log := string_log + 'px_r_1deriv_loc,py_r_1deriv_loc,pth_r_1deriv_loc,';
+  string_log := string_log + 'px_r_2deriv_loc,py_r_2deriv_loc,pth_r_2deriv_loc,';
+  string_log := string_log + 'px_e_loc (m),py_e_loc (m),pth_e_loc (rad),';
+  string_log := string_log + 'px_e_1deriv_loc,py_e_1deriv_loc,pth_e_1deriv_loc,';
+  string_log := string_log + 'px_gt (m),py_gt (m),pth_gt (rad),';
+  string_log := string_log + 'px_odo (m),py_odo (m),pth_odo (rad),';
+  string_log := string_log + 'px (m),py (m),pth (rad),';
+  string_log := string_log + 'px_r (m),py_r (m),pth_r (rad),';
+  string_log := string_log + 'px_r_1deriv,py_r_1deriv,pth_r_1deriv,';
+  string_log := string_log + 'px_r_2deriv,py_r_2deriv,pth_r_2deriv,';
+  string_log := string_log + 'xvel,i_global,u_ref,';
+  Log.Add(string_log);
+end;
+
+procedure UpdateLog;
+var
+  string_log: String;
+begin
+  //string_log := '';
+  string_log := string_log + Format('%.12g,%.12g,',[ time_var , t_global ]);
+  if (trajectory_on) then begin
+    string_log := string_log + '1,';
+  end else begin
+    string_log := string_log + '0,';
+  end;
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ vmot[iMOT1]                , vmot[iMOT2]                , vmot[iMOT3]                ]);
+  string_log := string_log + Format('%d,%d,%d,'         ,[ GetAxisOdo(iROBOT, iMOT1 ) , GetAxisOdo(iROBOT, iMOT2 ) , GetAxisOdo(iROBOT, iMOT3 ) ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ wmot[iMOT1]                , wmot[iMOT2]                , wmot[iMOT3]                ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ wmot_r[iMOT1]              , wmot_r[iMOT2]              , wmot_r[iMOT3]              ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ wmot_e[iMOT1]              , wmot_e[iMOT2]              , wmot_e[iMOT3]              ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ wmot_eint[iMOT1]           , wmot_eint[iMOT2]           , wmot_eint[iMOT3]           ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robv[1]                    , robv[2]                    , robv[3]                    ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robv_r[1]                  , robv_r[2]                  , robv_r[3]                  ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robv_pd_r[1]               , robv_pd_r[2]               , robv_pd_r[3]               ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robv_ff_r[1]               , robv_ff_r[2]               , robv_ff_r[3]               ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_loc[1]                , robp_loc[2]                , robp_loc[3]                ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_loc_r[1]              , robp_loc_r[2]              , robp_loc_r[3]              ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_loc_r_1deriv[1]       , robp_loc_r_1deriv[2]       , robp_loc_r_1deriv[3]       ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_loc_r_2deriv[1]       , robp_loc_r_2deriv[2]       , robp_loc_r_2deriv[3]       ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_loc_e[1]              , robp_loc_e[2]              , robp_loc_e[3]              ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_loc_ederiv[1]         , robp_loc_ederiv[2]         , robp_loc_ederiv[3]         ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robpgt[1]                  , robpgt[2]                  , robpgt[3]                  ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robpodo[1]                 , robpodo[2]                 , robpodo[3]                 ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp[1]                    , robp[2]                    , robp[3]                    ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_r[1]                  , robp_r[2]                  , robp_r[3]                  ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_r_1deriv[1]           , robp_r_1deriv[2]           , robp_r_1deriv[3]           ]);
+  string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_r_2deriv[1]           , robp_r_2deriv[2]           , robp_r_2deriv[3]           ]);
+  if (trajectory_on) then begin
+    string_log := string_log + Format('%.12g,%d,%.12g,',[ 1 , i_global , u_ref ]);
+  end;
+  Log.Add(string_log);
+end;
+
+
+
+procedure InitializeMatricesX(n_future: integer);
+var
+  i,j,u: integer;
+begin
+  // Least-squares with restrictions: acceleration (in terms of p0 and v0)
+  matX_acc      := Mzeros(n_future,1);   // Assuming u=0,1,2,3,...
+  matXinv_acc   := Mzeros(1,n_future);
+  matXtX_acc    := Mzeros(1,1);
+  matXtXinv_acc := Mzeros(1,1);
+  u := 0;
+  for i:=0 to n_future-1 do begin
+    Msetv(matX_acc,i,0, Power(u,2) / 2 );
+    u := u + 1;
+  end;
+  matXtX_acc    := Mmult( Mtran(matX_acc) , matX_acc );
+  matXtXinv_acc := Minv(matXtX_acc);
+  matXinv_acc   := Mmult( matXtXinv_acc , Mtran(matX_acc) );
+
+  // Least-squares without restrictions: velocity
+  matX_vel      := Mzeros(n_future,2);     // Assuming u=0,1,2,3,...
+  matXinv_vel   := Mzeros(2,n_future);
+  matXtX_vel    := Mzeros(2,2);
+  matXtXinv_vel := Mzeros(2,2);
+  for j:=0 to 1 do begin
+    u := 0;
+    for i:=0 to n_future-1 do begin
+      Msetv(matX_vel,i,j, Power(u,j) );
+      u := u + 1;
+    end;
+  end;
+  matXtX_vel    := Mmult( Mtran(matX_vel) , matX_vel );
+  matXtXinv_vel := Minv(matXtX_vel);
+  matXinv_vel   := Mmult( matXtXinv_vel , Mtran(matX_vel) );
+end;
+
+
+
 { CONTROL }
 procedure Control;
 begin
@@ -174,6 +367,51 @@ begin
   // Initialization
   UpdateRobotInfo;
 
+  // Setup
+  // - debug
+  if (RCButtonPressed(1,8)) then begin
+    if (debug_on) then begin
+      debug_on := false;
+      SetRCValue(1,9,'Off');
+    end else begin
+      debug_on := true;
+      SetRCValue(1,9,'On');
+      SetRCValue(2,12,'');
+    end;
+  end;
+  // - log
+  if (RCButtonPressed(2,8)) then begin
+    if (log_on) then begin
+      log_on := false;
+      SetRCValue(2,9,'Off');
+    end else begin
+      log_on := true;
+      SetRCValue(2,9,'On');
+      ConfigureLog;
+    end;
+  end;
+
+
+
+  // Control
+  //CtrlModeRobotPosition;
+
+
+
+  // Show robot information
+  if (debug_on) then
+    ShowRobotInfo;
+
+  // Log 
+  // - add data to TStringList
+  if (log_on) then begin
+    UpdateLog;
+  end;
+  // - save button was pressed by the user
+  if ((RCButtonPressed(2,10)) AND (Log <> nil)) then begin
+    SetRCValue(2,12,'Saved in log/' + GetRCText(2,11) + '.csv');
+    Log.SaveToFile('log/omnictrl_' + GetRCText(2,11) + '.csv' );
+  end;
 end;
 
 
@@ -183,8 +421,16 @@ procedure Initialize;
 begin
   mot_param := GetMotorPars(iROBOT,iMOT1);
   mot_fric  := GetFrictionDef(iROBOT,iMOT1);
-  mot_ctrl.vdead := GetRCValue(22,4);
-  mot_ctrl.vok   := GetRCValue(23,4);
+  mot_ctrl.vdead := PI_VDEAD;
+  mot_ctrl.vok   := PI_VOK;
+  debug_on := true;
+  SetRCValue(1,9,'On');
+  log_on := false;
+  SetRCValue(2,9,'Off');
+  ctrlff_on := true;
+
+  // Initialization Trajectory Control Matrices
+  InitializeMatricesX(NFUTURE);
 
   // Reset the kicker
   SetAxisSpring(iROBOT,iKICKER,10,0);
@@ -195,10 +441,7 @@ begin
   SetMotorControllerState(iROBOT,iMOT3,false);
 
   // Initial mode
-  //ctrlMode := cmRobP;
-  //SetRCValue(2,8,'cmRobP');
-  //robpCtrlMode := pcmTXT;
-  //ConfigureRobP;
+  //ConfigureRobot;
 
   // Reset sheet 
   // - robot information (position, velocity)
@@ -260,8 +503,8 @@ begin
   SetRCValue(19,2,format(PRECISIONFORMAT,[PI_TAU]));
   SetRCValue(20,2,format(PRECISIONFORMAT,[PI_LAG]));
   SetRCValue(21,2,format(PRECISIONFORMAT,[PI_DIVTAU]));
-  SetRCValue(20,4,format(PRECISIONFORMAT,[PI_VDEAD]));
-  SetRCValue(21,4,format(PRECISIONFORMAT,[PI_VOK]));
+  SetRCValue(20,4,format(PRECISIONFORMAT,[mot_ctrl.vdead]));
+  SetRCValue(21,4,format(PRECISIONFORMAT,[mot_ctrl.vok]));
   IMCmodelPIctrl( GetRCValue(18,2) , GetRCValue(19,2) , GetRCValue(20,2) , GetRCValue(21,2) , mot_ctrl.kc , mot_ctrl.ti );
   SetRCValue(18,3,'kc:');
   SetRCValue(19,3,'ti:');
@@ -315,4 +558,9 @@ begin
   SetRCValue(33,5,'a0:');
   SetRCValue(34,5,'a1:');
   BesselPrototypePDctrl(RangeToMatrix(27,2,2,3),GetRCValue(30,2),RangeToMatrix(30,5,2,2));
+
+  // Interaction with the user
+  SetRCValue(1,8,'[DEBUG]');
+  SetRCValue(2,8 ,'[LogOnOff]');
+  SetRCValue(2,10,'[LogSave]');
 end;

@@ -49,7 +49,7 @@
     </cuboid>
 
     <cylinder>
-      <ID value='wheel_1'/>
+      <ID value='wheel_1' kind='omni'/>
       <mass value='0.660'/>
       <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
       <size x='wheel_radius' z='0.042'/>
@@ -60,7 +60,7 @@
     </cylinder>
 
     <cylinder>
-      <ID value='wheel_2'/>
+      <ID value='wheel_2' kind='omni'/>
       <mass value='0.660'/>
       <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
       <size x='wheel_radius' z='0.042'/>
@@ -71,7 +71,7 @@
     </cylinder>
 
     <cylinder>
-      <ID value='wheel_3'/>
+      <ID value='wheel_3' kind='omni'/>
       <mass value='0.660'/>
       <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
       <size x='wheel_radius' z='0.042'/>
