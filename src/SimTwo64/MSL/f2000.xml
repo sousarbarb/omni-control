@@ -1,14 +1,37 @@
 <?xml version="1.0" ?>
 <robot>
   <defines>
+    <!-- Robot -->
     <const name='centerdist' value='0.195'/>
     <const name='wheel_radius' value='0.051'/>
+    <const name='robot_mass' value='27.1'/>
+    <const name='inertial_xx' value='1'/>
+    <const name='inertial_yy' value='1'/>
+    <const name='inertial_zz' value='1.1'/>
+    <!-- Wheels -->
+    <const name='surface_mu' value='1'/>
+    <const name='surface_mu2' value='0.25'/>
+    <const name='surface_soft' value='1e-2'/>
+    <!-- Motors -->
+    <const name='mot_ri' value='0.6'/>
+    <const name='mot_ki' value='0.3624'/>
+    <const name='mot_vmax' value='24'/>
+    <const name='mot_imax' value='6'/>
+    <!--const name='mot_gear' value='1'/-->
+    <const name='mot_bv' value='0.001316282616'/>
+    <const name='mot_fc' value='0.80734166'/>
+    <const name='mot_ppr' value='12288'/>
+    <const name='mot_pid_kp' value='0.245'/>
+    <const name='mot_pid_ki' value='0.0112'/>
+    <const name='mot_pid_kd' value='0.0'/>
+    <const name='mot_pid_kf' value='0.1887'/>
+    <const name='mot_pid_active' value='0'/>
   </defines>
 
   <solids>
     <cylinder>
       <ID value='Body'/>
-      <mass value='11.3' I11='1' I22='1' I33='100'/>
+      <mass value='robot_mass' I11='inertial_xx' I22='inertial_yy' I33='inertial_zz'/>
       <!-- size x = sqrt(I*2/m) = sqrt(0.704*2/27) -->
       <size x='0.06' z='0.2'/>
       <pos x='0' y='0' z='0.185'/>
@@ -28,6 +51,7 @@
     <cylinder>
       <ID value='wheel_1'/>
       <mass value='0.660'/>
+      <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
       <size x='wheel_radius' z='0.042'/>
       <pos x='centerdist * cos(pi()/3)' y='centerdist * sin(pi()/3)' z='wheel_radius'/>
       <rot_deg x='0' y='90' z='60'/>
@@ -38,6 +62,7 @@
     <cylinder>
       <ID value='wheel_2'/>
       <mass value='0.660'/>
+      <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
       <size x='wheel_radius' z='0.042'/>
       <pos x='centerdist * cos(-pi()/3)' y='centerdist * sin(-pi()/3)' z='wheel_radius'/>
       <rot_deg x='0' y='90' z='-60'/>
@@ -48,6 +73,7 @@
     <cylinder>
       <ID value='wheel_3'/>
       <mass value='0.660'/>
+      <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
       <size x='wheel_radius' z='0.042'/>
       <pos x='centerdist * cos(pi())' y='centerdist * sin(pi())' z='wheel_radius'/>
       <rot_deg x='0' y='90' z='180'/>
@@ -79,10 +105,10 @@
       <ID value='J1'/>
       <draw radius='0.01' height='0.5' rgb24='008F8F'/>
 
-      <motor ri='0.316' ki='0.0302' vmax='24' imax='12' active='1'/>
-      <friction bv='0.01' fc='0.0615'/>
-      <encoder ppr='12288' mean='0' stdev='0'/>
-      <controller mode='pidspeed' kp='0.245' ki='0.0112' kd='0.0' kf='0.1887' active='1' period='10'/>
+      <motor ri='mot_ri' ki='mot_ki' vmax='mot_vmax' imax='mot_imax' active='1'/>
+      <friction bv='mot_bv' fc='mot_fc'/>
+      <encoder ppr='mot_ppr' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='mot_pid_kp' ki='mot_pid_ki' kd='mot_pid_kd' kf='mot_pid_kf' active='mot_pid_active' period='10'/>
 
       <connect B1='Body' B2='wheel_1'/>
       <pos x='0' y='0' z='wheel_radius'/>
@@ -94,10 +120,10 @@
       <ID value='J2'/>
       <draw radius='0.01' height='0.5' rgb24='8F8F00'/>
 
-      <motor ri='0.316' ki='0.0302' vmax='24' imax='12' active='1'/>
-      <friction bv='0.01' fc='0.0615'/>
-      <encoder ppr='12288' mean='0' stdev='0'/>
-      <controller mode='pidspeed' kp='0.245' ki='0.0112' kd='0.0' kf='0.1887' active='1' period='10'/>
+      <motor ri='mot_ri' ki='mot_ki' vmax='mot_vmax' imax='mot_imax' active='1'/>
+      <friction bv='mot_bv' fc='mot_fc'/>
+      <encoder ppr='mot_ppr' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='mot_pid_kp' ki='mot_pid_ki' kd='mot_pid_kd' kf='mot_pid_kf' active='mot_pid_active' period='10'/>
 
       <connect B1='Body' B2='wheel_2'/>
       <pos x='0' y='0' z='wheel_radius'/>
@@ -109,10 +135,10 @@
       <ID value='J3'/>
       <draw radius='0.01' height='0.5' rgb24='8F008F'/>
 
-      <motor ri='0.316' ki='0.0302' vmax='24' imax='12' active='1'/>
-      <friction bv='0.01' fc='0.0615'/>
-      <encoder ppr='12288' mean='0' stdev='0'/>
-      <controller mode='pidspeed' kp='0.245' ki='0.0112' kd='0.0' kf='0.1887' active='1' period='10'/>
+      <motor ri='mot_ri' ki='mot_ki' vmax='mot_vmax' imax='mot_imax' active='1'/>
+      <friction bv='mot_bv' fc='mot_fc'/>
+      <encoder ppr='mot_ppr' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='mot_pid_kp' ki='mot_pid_ki' kd='mot_pid_kd' kf='mot_pid_kf' active='mot_pid_active' period='10'/>
 
       <connect B1='Body' B2='wheel_3'/>
       <pos x='0' y='0' z='wheel_radius'/>

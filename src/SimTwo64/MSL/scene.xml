@@ -6,10 +6,4 @@
     <rot_deg x='0' y='0' z='0'/>
     <body file='f2000.xml'/>
   </robot>
-
-
-  <!--<track file='track.xml'/>-->
-  <notrack file='track.xml'/>
-  <track file='field.xml'/>
-
 </scene>
