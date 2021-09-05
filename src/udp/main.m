@@ -10,30 +10,30 @@ clc
 
 % Set connection parameters
 % - master PC:
-udpPC.ip = "127.0.0.1"; % Local IP address ({MATLAB,SimTwo}@PC1)
+udpPC.ip = "172.16.0.150"; % Local IP address ({MATLAB,SimTwo}@PC1)
 udpPC.portRX = 9094;          % Local port used by MATLAB
 udpPC.portTX = 9808;          % Local port used by SimTwo
 udpPC.datagramSize = 65000;   % Maximum size (bytes) of each datagram
 udpPC.timeout = 5;            % Timeout of read/write ops (in seconds)
 % - 5dpo MSL robot:
-udp5dpoRob.ip = "127.0.0.1"; % Local IP address ({MATLAB,SimTwo}@PC1)
+udp5dpoRob.ip = "172.16.0.164"; % Local IP address ({MATLAB,SimTwo}@PC1)
 udp5dpoRob.portRX = 9001;          % Local port used by MATLAB
 udp5dpoRob.portTX = 9006;          % Local port used by SimTwo
 udp5dpoRob.datagramSize = 65000;   % Maximum size (bytes) of each datagram
 udp5dpoRob.timeout = 5;            % Timeout of read/write ops (in seconds)
 
 % Create transmisson and reception channels for master PC
-[udpPCRX  ,udpPCTX  ] = setUDPConnection(udpPC);
-[udp5DPORX,udp5DPOTX] = setUDPConnection(udp5dpoRob);
+[udpPCRX,udpPCTX] = setUDPConnection(udpPC);
 
 
 %% DELETE UDP CONNECTION
 flush(udpPCRX)
 flush(udpPCTX)
 clear udpPCRX udpPCTX
-flush(udp5DPORX)
-flush(udp5DPOTX)
-clear udp5DPORX udp5DPOTX
+
+
+%% EXAMPLE READ
+read(udpPCRX,1,"string")
 
 
 %% PWM - SEND COMMANDS TEST V : START SEQUENCE
