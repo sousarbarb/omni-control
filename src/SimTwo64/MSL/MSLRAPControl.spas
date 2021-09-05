@@ -30,6 +30,7 @@ const
   NFUTURE = 5;
   GOAL_TOL_XY = 0.05; // meters
   GOAL_TOL_TH = 2.5;  // degrees
+  XVEL = 0.5;
 
 
 
@@ -364,11 +365,11 @@ begin
   SetRCValue(8,8,'[FFOnOff]');
   SetRCValue(8,9,'On');
 
-  //robpData := pdGT;
-  robpData := pdODO;
+  robpData := pdGT;
+  //robpData := pdODO;
   SetRCValue(8,10,'[GT/ODO]');
-  //SetRCValue(8,11,'sim2');
-  SetRCValue(8,11,'odometry');
+  SetRCValue(8,11,'sim2');
+  //SetRCValue(8,11,'odometry');
 
   chart_type := ctPosXY;
   SetRCValue(4,11,'PosXY');
@@ -564,6 +565,71 @@ begin
   SetRCValue(10,11,format(DOUBLEFORMAT,[ Deg(thf) ]));
 end;
 
+function Ceil(x: double): LongInt;
+begin
+  if (x - Round(x) > 0) then begin
+    result := Round(x) + 1;
+  end else begin
+    result := Round(x);
+  end;
+end;
+
+function Floor(x: double): LongInt;
+begin
+  if (x - Round(x) > 0) then begin
+    result := Round(x);
+  end else begin
+    result := Round(x) - 1;
+  end;
+end;
+
+procedure SetPositionControllerFFReferences;
+var
+  u_0, u_f: integer;
+begin
+  // Global time
+  t_global := t_global + (Tscript*FREQDIVPOSCTRL);
+  // Reference indexes
+  u_ref := t_global * XVEL / (Tscript*FREQDIVPOSCTRL) - i_global * 1.0;
+  while (u_ref >= 1) do begin
+    i_global := i_global + 1;
+    u_ref := t_global * XVEL / (Tscript*FREQDIVPOSCTRL) - i_global * 1.0;
+  end;
+  InitializeBuffers(i_global);
+  
+  // Interpolation
+  u_0 := Floor(u_ref);
+  u_f := u_0 + 1;
+  if (u_0 < 0) then begin
+    u_0 := 0;
+    u_f := 1;
+  end;
+
+  // Set reference
+  // - position (interpolation):
+  robp_r[1] := Mgetv(matBuffFutureX ,u_0,0) +
+              (Mgetv(matBuffFutureX ,u_f,0) - Mgetv(matBuffFutureX ,u_0,0)) * (u_ref - u_0 * 1.0);
+  robp_r[2] := Mgetv(matBuffFutureY ,u_0,0) +
+              (Mgetv(matBuffFutureY ,u_f,0) - Mgetv(matBuffFutureY ,u_0,0)) * (u_ref - u_0 * 1.0);
+  robp_r[3] := Mgetv(matBuffFutureTH,u_0,0) +
+              (Mgetv(matBuffFutureTH,u_f,0) - Mgetv(matBuffFutureTH,u_0,0)) * (u_ref - u_0 * 1.0);
+  // - first derivative:
+  robp_r_1deriv[1] := Mgetv(matFutTrajApproxCoeffX_1deriv ,0,0);
+  robp_r_1deriv[2] := Mgetv(matFutTrajApproxCoeffY_1deriv ,0,0);
+  robp_r_1deriv[3] := Mgetv(matFutTrajApproxCoeffTH_1deriv,0,0);
+  // - second derivative:
+  robp_r_2deriv[1] := Mgetv(matFutTrajApproxCoeffX_2deriv ,0,0);
+  robp_r_2deriv[2] := Mgetv(matFutTrajApproxCoeffY_2deriv ,0,0);
+  robp_r_2deriv[3] := Mgetv(matFutTrajApproxCoeffTH_2deriv,0,0);
+  // u -> t
+  robp_r_1deriv[1] := robp_r_1deriv[1] * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_1deriv[2] := robp_r_1deriv[2] * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_1deriv[3] := robp_r_1deriv[3] * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_2deriv[1] := robp_r_2deriv[1] * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_2deriv[2] := robp_r_2deriv[2] * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_2deriv[3] := robp_r_2deriv[3] * XVEL / (Tscript*FREQDIVPOSCTRL);
+end;
+
 procedure CtrlModeRobotPosition;
 var
   i,j: integer;
@@ -637,16 +703,18 @@ begin
   // - position controllers
   if ( iFREQDIVPOSCTRL >= FREQDIVPOSCTRL) then begin
 
-    // - test PD and FF position controllers
-    robp_r[1] := 0;
-    robp_r[2] := 0;
-    robp_r[3] := 0;
-    robp_r_1deriv[1] := 0;
-    robp_r_1deriv[2] := 0;
-    robp_r_1deriv[3] := 0;
-    robp_r_2deriv[1] := 0;
-    robp_r_2deriv[2] := 0;
-    robp_r_2deriv[3] := 0;
+    // - check goal
+    if (trajectory_on) then begin
+      if (IsGoalReached(Mgetv(trajectory,trajectory_numpoints-1,0),
+                        Mgetv(trajectory,trajectory_numpoints-1,1),
+                        Mgetv(trajectory,trajectory_numpoints-1,2))) then begin
+        trajectory_on := false;
+      end;
+    end;
+    // - set position references
+    if (trajectory_on) then begin
+      SetPositionControllerFFReferences;
+    end;
     // - position control
     RobotPosControllers;
 
