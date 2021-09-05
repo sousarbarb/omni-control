@@ -47,14 +47,18 @@ type
     kp,tau: double;
   end;
 
+  TChartType = (ctPosXY,ctPosT);
+
 
 
 { GLOBAL VARIABLES }
 var
   chart_on, log_on, debug_on: boolean;
   Tscript, time_var: double;
+  iFREQDIVPOSCTRL: integer;
   Log: TStringList;
   robpData: TRobotPosData;
+  chart_type: TChartType;
 
   // Robot
   ctrlff_on: boolean;
@@ -80,6 +84,35 @@ var
   matX_vel, matXinv_vel, matXtX_vel, matXtXinv_vel: Matrix;  // (to compute the velocity)
 
 
+
+procedure ResetRobotInfo;
+var
+  i: integer;
+begin
+  SetRobotPos(iROBOT,0,0,0,0);
+  for i:= 0 to 2 do begin
+    vmot[i+iMOT1]      := 0;
+    wmot[i+iMOT1]      := 0;
+    wmot_r[i+iMOT1]    := 0;
+    wmot_e[i+iMOT1]    := 0;
+    wmot_eint[i+iMOT1] := 0;
+    robv[i+1]      := 0;
+    robv_r[i+1]    := 0;
+    robp_loc[i+1]        := 0;
+    robp_loc_r[i+1]      := 0;
+    robp_loc_e[i+1]      := 0;
+    robp_loc_eprev[i+1]  := 0;
+    robp_loc_ederiv[i+1] := 0;
+    robp[i+1]    := 0;
+    robp_r[i+1]  := 0;
+    robd[i+1]    := 0;
+    robpodo[i+1] := 0;
+    robp_r_1deriv[i+1]     := 0;
+    robp_r_2deriv[i+1]     := 0;
+    robp_loc_r_1deriv[i+1] := 0;
+    robp_loc_r_2deriv[i+1] := 0;
+  end;
+end;
 
 procedure UpdateRobotInfo;
 var
@@ -168,6 +201,100 @@ begin
       SetRCValue(23+i,4,format(DOUBLEFORMAT,[ robd[i+1]    ]));
     end;
     SetRCValue(23+i,6,format(DOUBLEFORMAT,[ robv[i+1] ]));
+  end;
+end;
+
+
+
+procedure ConfigureCtrlModeRobotPosition;
+begin
+  ResetRobotInfo;
+
+  iFREQDIVPOSCTRL := 0;
+  trajectory_on := false;
+  SetRCValue(6,9,'Filename:');
+  SetRCValue(7,8,'[LoadTraj]');
+
+  ctrlff_on := true;
+  SetRCValue(8,8,'[FFOnOff]');
+  SetRCValue(8,9,'On');
+
+  robpData := pdGT;
+  SetRCValue(8,10,'[GT/ODO]');
+  SetRCValue(8,11,'sim2');
+
+  chart_type := ctPosXY;
+  SetRCValue(4,11,'PosXY');
+  ChartSeriesSetCount(0,NUM_MOT*2);
+  ChartSeriesSetColor(0,0,clRed);
+  ChartSeriesSetColor(0,1,clRed);
+  ChartSeriesSetColor(0,2,clGreen);
+  ChartSeriesSetColor(0,3,clGreen);
+  ChartSeriesSetColor(0,4,clBlue);
+  ChartSeriesSetColor(0,5,clBlue);
+end;
+
+procedure CtrlModeRobotPosition;
+var
+  i,j: integer;
+begin
+  // Setup: Chart
+  // - clear
+  if (RCButtonPressed(4,12)) then begin
+    time_var := 0;
+    for i := 0 to 5 do begin
+      ChartSeriesClear(0,i);
+    end;
+  end;
+  // - select type chart
+  if (RCButtonPressed(4,10)) then begin
+    if (chart_type = ctPosXY) then begin
+      chart_type := ctPosT;
+      SetRCValue(4,11,'PosTime');
+    end else begin
+      chart_type := ctPosXY;
+      SetRCValue(4,11,'PosXY');
+    end;
+
+    time_var := 0;
+    ChartSeriesSetCount(0,NUM_MOT*2);
+    ChartSeriesSetColor(0,0,clRed);
+    ChartSeriesSetColor(0,1,clRed);
+    ChartSeriesSetColor(0,2,clGreen);
+    ChartSeriesSetColor(0,3,clGreen);
+    ChartSeriesSetColor(0,4,clBlue);
+    ChartSeriesSetColor(0,5,clBlue);
+  end;
+  // - position data mode (ground-truth vs odometry)
+  if (RCButtonPressed(8,10)) then begin
+    if (robpData = pdGT) then begin
+      robpData := pdODO;
+      SetRCValue(8,11,'odometry');
+    end else begin
+      robpData := pdGT;
+      SetRCValue(8,11,'sim2');
+    end;
+  end;
+
+
+
+  // Chart
+  if (chart_on) then begin
+    case (chart_type) of
+      ctPosXY: begin
+        ChartSeriesAddXY(0,0,robp_r[1],robp_r[2]);
+        ChartSeriesAddXY(0,4,robp[1]  ,robp[2]  );
+      end;
+
+      ctPosT: begin
+        j := 0;
+        for i := 1 to 3 do begin
+          ChartSeriesAddXY(0,j  ,time_var,robp_r[i]);
+          ChartSeriesAddXY(0,j+1,time_var,robp[i]);
+          j := j + 2;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -390,11 +517,29 @@ begin
       ConfigureLog;
     end;
   end;
+  // - chart
+  if (RCButtonPressed(4,8)) then begin
+    if (chart_on) then begin
+      chart_on := false;
+      SetRCValue(4,9,'Off');
+    end else begin
+      chart_on := true;
+      SetRCValue(4,9,'On');
+    end;
+    time_var := 0;
+    ChartSeriesSetCount(0,NUM_MOT*2);
+    ChartSeriesSetColor(0,0,clRed);
+    ChartSeriesSetColor(0,1,clRed);
+    ChartSeriesSetColor(0,2,clGreen);
+    ChartSeriesSetColor(0,3,clGreen);
+    ChartSeriesSetColor(0,4,clBlue);
+    ChartSeriesSetColor(0,5,clBlue);
+  end;
 
 
 
   // Control
-  //CtrlModeRobotPosition;
+  CtrlModeRobotPosition;
 
 
 
@@ -426,8 +571,10 @@ begin
   debug_on := true;
   SetRCValue(1,9,'On');
   log_on := false;
+  SetRCValue(1,11,'Filename:');
   SetRCValue(2,9,'Off');
-  ctrlff_on := true;
+  chart_on := false;
+  SetRCValue(4,9,'Off');
 
   // Initialization Trajectory Control Matrices
   InitializeMatricesX(NFUTURE);
@@ -441,7 +588,7 @@ begin
   SetMotorControllerState(iROBOT,iMOT3,false);
 
   // Initial mode
-  //ConfigureRobot;
+  ConfigureCtrlModeRobotPosition;
 
   // Reset sheet 
   // - robot information (position, velocity)
@@ -563,4 +710,7 @@ begin
   SetRCValue(1,8,'[DEBUG]');
   SetRCValue(2,8 ,'[LogOnOff]');
   SetRCValue(2,10,'[LogSave]');
+  SetRCValue(4,8 ,'[ChOnOff]');
+  SetRCValue(4,10,'[ChType]');
+  SetRCValue(4,12,'[ChClear]');
 end;
