@@ -213,6 +213,67 @@ end;
 
 
 
+procedure MotorVoltageHammerstein(var motor_volt: double);
+begin
+  if (motor_volt > mot_ctrl.vdead) then begin
+    motor_volt := (motor_volt - mot_ctrl.vdead) + mot_ctrl.vok;
+  end else if (motor_volt > -mot_ctrl.vdead) then begin
+    if (mot_ctrl.vdead <> 0) then begin
+      motor_volt := motor_volt * mot_ctrl.vok / mot_ctrl.vdead;
+    end else begin
+      motor_volt := 0;
+    end;
+  end else begin
+    motor_volt := (motor_volt + mot_ctrl.vdead) - mot_ctrl.vok;
+  end;
+end;
+
+procedure PIMotorsControllers;
+var
+  i: integer;
+  tmp_eint: double;
+begin
+  // PI controllers
+  for i := iMOT1 to iMOT3 do begin
+    // Errors (proportional and integral)
+    wmot_e[i] := wmot_r[i] - wmot[i];
+    tmp_eint  := wmot_eint[i] + wmot_e[i] * Tscript;
+
+    // Remove integration for zero reference
+    if (wmot_r[i] = 0) then begin
+      tmp_eint := 0;
+    end;
+
+    // Voltage (without saturation)
+    if (mot_ctrl.ti = 0) then begin
+      vmot[i] := mot_ctrl.kc * wmot_e[i];
+    end else begin
+      vmot[i] := mot_ctrl.kc * ( wmot_e[i] + tmp_eint / mot_ctrl.ti );
+    end;
+
+    // Increase gain in the deadzone
+    MotorVoltageHammerstein(vmot[i]);
+
+    // Voltage (with saturation): to prevent the windup effect
+    if (((vmot[i] > mot_param.vmax) AND (tmp_eint > 0)) OR ((vmot[i] < -mot_param.vmax) AND (tmp_eint < 0))) then begin
+      vmot[i] := vmot[i] + mot_ctrl.kc * (wmot_eint[i] - tmp_eint) / mot_ctrl.ti;
+    end else begin
+      wmot_eint[i] := tmp_eint;
+    end;
+
+    // Saturate the output
+    if (vmot[i] > mot_param.vmax) then begin
+      vmot[i] := mot_param.vmax;
+    end else if (vmot[i] < -mot_param.vmax) then begin
+      vmot[i] := -mot_param.vmax;
+    end;
+
+    SetAxisVoltageRef(iROBOT,i,vmot[i]);
+  end;
+end;
+
+
+
 procedure ConfigureCtrlModeRobotPosition;
 begin
   ResetRobotInfo;
@@ -478,6 +539,21 @@ begin
 
 
   // Position control of the omnidirectional robot
+  // - update index to run position control at 40ms
+  iFREQDIVPOSCTRL := iFREQDIVPOSCTRL + 1;
+  // - position controllers
+  if ( iFREQDIVPOSCTRL >= FREQDIVPOSCTRL) then begin
+    // - test motors
+    wmot_r[iMOT1] := 1;
+    wmot_r[iMOT2] := -1;
+    wmot_r[iMOT3] := 0;
+  end;
+  // - motors PI controllers
+  PIMotorsControllers;
+  // - reset index
+  if ( iFREQDIVPOSCTRL >= FREQDIVPOSCTRL) then begin
+    iFREQDIVPOSCTRL := 0;
+  end;
 
 
 
