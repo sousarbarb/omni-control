@@ -85,6 +85,10 @@ var
   t_global, u_ref: double;
   matX_acc, matXinv_acc, matXtX_acc, matXtXinv_acc: Matrix;  // (to compute the acceleration)
   matX_vel, matXinv_vel, matXtX_vel, matXtXinv_vel: Matrix;  // (to compute the velocity)
+  matBuffFutureX,matBuffFutureY,matBuffFutureTH: Matrix;
+  matFutTrajApproxCoeffX       ,matFutTrajApproxCoeffY       ,matFutTrajApproxCoeffTH       : Matrix;
+  matFutTrajApproxCoeffX_1deriv,matFutTrajApproxCoeffY_1deriv,matFutTrajApproxCoeffTH_1deriv: Matrix;
+  matFutTrajApproxCoeffX_2deriv,matFutTrajApproxCoeffY_2deriv,matFutTrajApproxCoeffTH_2deriv: Matrix;
 
 
 
@@ -216,6 +220,7 @@ begin
   iFREQDIVPOSCTRL := 0;
   trajectory_on := false;
   SetRCValue(6,9,'Filename:');
+  SetRCValue(6,10,'#points:');
   SetRCValue(7,8,'[LoadTraj]');
 
   ctrlff_on := true;
@@ -235,6 +240,120 @@ begin
   ChartSeriesSetColor(0,3,clGreen);
   ChartSeriesSetColor(0,4,clBlue);
   ChartSeriesSetColor(0,5,clBlue);
+end;
+
+procedure InitializeBuffers(i0: integer);
+var
+  i, last_i: integer;
+  p0x,p0y,p0th,v0x,v0y,v0th: double;
+  matApproxCoeffTempX,matApproxCoeffTempY,matApproxCoeffTempTH,matBuffFutureTempX,matBuffFutureTempY,matBuffFutureTempTH: Matrix;
+begin
+  // Initialization    
+  matBuffFutureX  := Mzeros(NFUTURE,1);
+  matBuffFutureY  := Mzeros(NFUTURE,1);
+  matBuffFutureTH := Mzeros(NFUTURE,1);
+  matFutTrajApproxCoeffX         := Mzeros(3,1);
+  matFutTrajApproxCoeffY         := Mzeros(3,1);
+  matFutTrajApproxCoeffTH        := Mzeros(3,1);
+  matFutTrajApproxCoeffX_1deriv  := Mzeros(3,1);
+  matFutTrajApproxCoeffY_1deriv  := Mzeros(3,1);
+  matFutTrajApproxCoeffTH_1deriv := Mzeros(3,1);
+  matFutTrajApproxCoeffX_2deriv  := Mzeros(3,1);
+  matFutTrajApproxCoeffY_2deriv  := Mzeros(3,1);
+  matFutTrajApproxCoeffTH_2deriv := Mzeros(3,1);
+
+  // Initialize initial position and velocity
+  // - Initial position (1st restriction):
+  if (i0 < trajectory_numpoints) then begin
+    p0x := Mgetv(trajectory,i0,0);
+    p0y := Mgetv(trajectory,i0,1);
+    p0th:= Mgetv(trajectory,i0,2);
+  end else begin
+    p0x := Mgetv(trajectory,trajectory_numpoints-1,0);
+    p0y := Mgetv(trajectory,trajectory_numpoints-1,1);
+    p0th:= Mgetv(trajectory,trajectory_numpoints-1,2);
+  end;
+  // - Initial velocity (1st restriction):
+  if (i0+1 < trajectory_numpoints) then begin
+    v0x :=                Mgetv(trajectory,i0+1,0) - Mgetv(trajectory,i0,0);
+    v0y :=                Mgetv(trajectory,i0+1,1) - Mgetv(trajectory,i0,1);
+    v0th:= NormalizeAngle(Mgetv(trajectory,i0+1,2) - Mgetv(trajectory,i0,2));
+  end else begin
+    v0x := 0;
+    v0y := 0;
+    v0th:= 0;
+  end;
+  // - Auxiliar variables:
+  matBuffFutureTempX := Mzeros(NFUTURE,1);
+  matBuffFutureTempY := Mzeros(NFUTURE,1);
+  matBuffFutureTempTH:= Mzeros(NFUTURE,1);
+
+  // Initialize the future/horizon buffer
+  last_i := 0;
+  for i:=0 to NFUTURE-1 do begin
+    // Index outside the trajectory
+    if (i+i0 >= trajectory_numpoints) then begin
+      break;
+    end;
+
+    // Buffer
+    Msetv(matBuffFutureX ,i,0, Mgetv(trajectory,i+i0,0) );
+    Msetv(matBuffFutureY ,i,0, Mgetv(trajectory,i+i0,1) );
+    Msetv(matBuffFutureTH,i,0, Mgetv(trajectory,i+i0,2) );
+    // Auxiliar matrices
+    Msetv(matBuffFutureTempX ,i,0,                Mgetv(trajectory,i+i0,0) - p0x  - v0x  * i );
+    Msetv(matBuffFutureTempY ,i,0,                Mgetv(trajectory,i+i0,1) - p0y  - v0y  * i );
+    Msetv(matBuffFutureTempTH,i,0, NormalizeAngle(Mgetv(trajectory,i+i0,2) - p0th - v0th * i) );
+
+    last_i := last_i + 1;
+  end;
+  // - retain final pose of the trajectory
+  for i:=last_i to NFUTURE-1 do begin
+    // Buffer
+    Msetv(matBuffFutureX ,i,0, Mgetv(trajectory,trajectory_numpoints-1,0) );
+    Msetv(matBuffFutureY ,i,0, Mgetv(trajectory,trajectory_numpoints-1,1) );
+    Msetv(matBuffFutureTH,i,0, Mgetv(trajectory,trajectory_numpoints-1,2) );
+    // Auxiliar matrices
+    Msetv(matBuffFutureTempX ,i,0,                Mgetv(trajectory,trajectory_numpoints-1,0) - p0x  - v0x  * i );
+    Msetv(matBuffFutureTempY ,i,0,                Mgetv(trajectory,trajectory_numpoints-1,1) - p0y  - v0y  * i );
+    Msetv(matBuffFutureTempTH,i,0, NormalizeAngle(Mgetv(trajectory,trajectory_numpoints-1,2) - p0th - v0th * i) );
+  end;
+  // - Unwrap the orientation
+  for i:=1 to NFUTURE-1 do begin
+    Msetv(matBuffFutureTH    ,i,0, Mgetv(matBuffFutureTH    ,i-1,0) + NormalizeAngle(Mgetv(matBuffFutureTH    ,i,0) - Mgetv(matBuffFutureTH    ,i-1,0)) );
+    Msetv(matBuffFutureTempTH,i,0, Mgetv(matBuffFutureTempTH,i-1,0) + NormalizeAngle(Mgetv(matBuffFutureTempTH,i,0) - Mgetv(matBuffFutureTempTH,i-1,0)) );
+  end;
+
+  // Estimate approximated trajectory matTrajApproxCoeff
+  // - TH:
+  //   - Position (not required):
+  matApproxCoeffTempTH := Mmult(matXinv_acc , matBuffFutureTempTH );
+  Msetv(matFutTrajApproxCoeffTH,0,0, p0th );
+  Msetv(matFutTrajApproxCoeffTH,1,0, v0th );
+  Msetv(matFutTrajApproxCoeffTH,2,0, (0.5) * Mgetv(matApproxCoeffTempTH,0,0) );
+  //   - Acceleration (2nd-order approximation with restrictions):
+  Msetv(matFutTrajApproxCoeffTH_2deriv,0,0, Mgetv(matApproxCoeffTempTH,0,0)  );
+  //   - Velocity (1st-order approximation):
+  matApproxCoeffTempTH := Mmult( matXinv_vel , matBuffFutureTH  );
+  Msetv(matFutTrajApproxCoeffTH_1deriv,0,0, Mgetv(matApproxCoeffTempTH,1,0)  );
+  // - X,Y:
+  //   - Position (not required):
+  matApproxCoeffTempX := Mmult( matXinv_acc , matBuffFutureTempX  );  // a2_x, a3_x, ..., aNpoly_x
+  matApproxCoeffTempY := Mmult( matXinv_acc , matBuffFutureTempY  );  // a2_y, a3_y, ..., aNpoly_y
+  Msetv(matFutTrajApproxCoeffX,0,0, p0x );
+  Msetv(matFutTrajApproxCoeffX,1,0, v0x );
+  Msetv(matFutTrajApproxCoeffX,2,0, (0.5) * Mgetv(matApproxCoeffTempX,0,0) );
+  Msetv(matFutTrajApproxCoeffY,0,0, p0y );
+  Msetv(matFutTrajApproxCoeffY,1,0, v0y );
+  Msetv(matFutTrajApproxCoeffY,2,0, (0.5) * Mgetv(matApproxCoeffTempY,0,0) );
+  //   - Acceleration (2nd-order approximation with restrictions):
+  Msetv(matFutTrajApproxCoeffX_2deriv,0,0, Mgetv(matApproxCoeffTempX,0,0)  );
+  Msetv(matFutTrajApproxCoeffY_2deriv,0,0, Mgetv(matApproxCoeffTempY,0,0)  );
+  //   - Velocity (1st-order approximation):
+  matApproxCoeffTempX := Mmult( matXinv_vel , matBuffFutureX  );
+  matApproxCoeffTempY := Mmult( matXinv_vel , matBuffFutureY  );
+  Msetv(matFutTrajApproxCoeffX_1deriv,0,0, Mgetv(matApproxCoeffTempX,1,0)  );
+  Msetv(matFutTrajApproxCoeffY_1deriv,0,0, Mgetv(matApproxCoeffTempY,1,0)  );
 end;
 
 procedure ReadTrajectoryFile;
@@ -257,6 +376,7 @@ begin
   // Initialization
   trajectory_numpoints := trajectory_file.Count;
   trajectory := Mzeros(trajectory_numpoints,3);
+  SetRCValue(7,10, format('%d',[ trajectory_numpoints ]) );
 
   // Process trajectory (trajectory + 1st future points)
   for i:=0 to (trajectory_numpoints-1) do begin
@@ -287,7 +407,7 @@ begin
   i_global := 0;
   t_global := 0;
   time_var := 0;
-  //InitializeBuffers(i_global);
+  InitializeBuffers(i_global);
 end;
 
 procedure CtrlModeRobotPosition;
