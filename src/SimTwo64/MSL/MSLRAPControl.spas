@@ -275,6 +275,33 @@ begin
       SetRCValue(8,11,'sim2');
     end;
   end;
+  // - feedforward controllers ON/OFF
+  if (RCButtonPressed(8,8)) then begin
+    if (ctrlff_on) then begin
+      ctrlff_on := false;
+      SetRCValue(8,9,'Off');
+    end else begin
+      ctrlff_on := true;
+      SetRCValue(8,9,'On');
+    end;
+  end;
+  // - load trajectory
+  if (RCButtonPressed(7,8)) then begin
+    //ReadTrajectoryFile;
+
+    time_var := 0;
+    ChartSeriesSetCount(0,NUM_MOT*2);
+    ChartSeriesSetColor(0,0,clRed);
+    ChartSeriesSetColor(0,1,clRed);
+    ChartSeriesSetColor(0,2,clGreen);
+    ChartSeriesSetColor(0,3,clGreen);
+    ChartSeriesSetColor(0,4,clBlue);
+    ChartSeriesSetColor(0,5,clBlue);
+  end;
+
+
+
+  // Position control of the omnidirectional robot
 
 
 
