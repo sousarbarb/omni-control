@@ -28,6 +28,8 @@ const
   PD_TSETT = 0.8;
   // Trajectory (DO NOT CHANGE THIS PARAMETERS)
   NFUTURE = 5;
+  GOAL_TOL_XY = 0.05; // meters
+  GOAL_TOL_TH = 2.5;  // degrees
 
 
 
@@ -272,6 +274,76 @@ begin
   end;
 end;
 
+procedure PDRobotPosControllers;
+var
+  i: integer;
+begin
+  for i:=1 to 3 do begin
+    // PD controllers
+    // - errors (proportional and derivative)
+    if (i <> 3) then begin
+      robp_loc_eprev[i]  := robp_loc_e[i];
+      robp_loc_e[i]      := robp_loc_r[i] - robp_loc[i];
+      robp_loc_ederiv[i] := (robp_loc_e[i] - robp_loc_eprev[i])/(4*Tscript);
+    end else begin
+      robp_loc_eprev[i]  := robp_loc_e[i];
+      robp_loc_e[i]      := NormalizeAngle( robp_loc_r[i] - robp_loc[i]       );
+      robp_loc_ederiv[i] := NormalizeAngle( robp_loc_e[i] - robp_loc_eprev[i] )/(4*Tscript);
+    end;
+
+    // - robot velocity
+    robv_pd_r[i] := rob_pdctrl[i].kc * ( robp_loc_e[i] + rob_pdctrl[i].td * robp_loc_ederiv[i] );
+  end;
+end;
+
+procedure FFRobotPosControllers;
+var
+  i: integer;
+begin
+  for i:=1 to 3 do begin
+    // FF controllers
+    robv_ff_r[i] := robp_loc_r_2deriv[i] * rob_model[i].tau / rob_model[i].kp + robp_loc_r_1deriv[i] / rob_model[i].kp;
+  end;
+end;
+
+procedure RobotPosControllers;
+var
+  i: integer;
+  scale,max_w: double;
+begin
+  // Position control
+  // - global > local coordinate frame
+  robp_loc_r[1] :=  robp_r[1]*cos(robp[3]) + robp_r[2]*sin(robp[3]);
+  robp_loc_r[2] := -robp_r[1]*sin(robp[3]) + robp_r[2]*cos(robp[3]);
+  robp_loc_r[3] :=  robp_r[3];
+  robp_loc_r_1deriv[1] :=  robp_r_1deriv[1]*cos(robp[3]) + robp_r_1deriv[2]*sin(robp[3]);
+  robp_loc_r_1deriv[2] := -robp_r_1deriv[1]*sin(robp[3]) + robp_r_1deriv[2]*cos(robp[3]);
+  robp_loc_r_1deriv[3] :=  robp_r_1deriv[3];
+  robp_loc_r_2deriv[1] :=  robp_r_2deriv[1]*cos(robp[3]) + robp_r_2deriv[2]*sin(robp[3]);
+  robp_loc_r_2deriv[2] := -robp_r_2deriv[1]*sin(robp[3]) + robp_r_2deriv[2]*cos(robp[3]);
+  robp_loc_r_2deriv[3] :=  robp_r_2deriv[3];
+  // - proportional-derivative controllers
+  PDRobotPosControllers;
+  // - feedforward controllers
+  if (ctrlff_on) then begin
+    FFRobotPosControllers;
+  end else begin
+    for i:=1 to 3 do begin
+      robv_ff_r[i] := 0;
+    end;
+  end;
+
+  // Velocity of the robot
+  for i:=1 to 3 do begin
+    robv_r[i] := robv_pd_r[i] + robv_ff_r[i];
+  end;
+
+  // Inverse Kinematics
+  wmot_r[iMOT1] := -( -Sqrt(3)*robv_r[1]/2 - robv_r[2]/2 - ROBOT_L*robv_r[3] ) * 2 / ROBOT_WH_D;
+  wmot_r[iMOT2] := -(  Sqrt(3)*robv_r[1]/2 - robv_r[2]/2 - ROBOT_L*robv_r[3] ) * 2 / ROBOT_WH_D;
+  wmot_r[iMOT3] := -(  0                   + robv_r[2]   - ROBOT_L*robv_r[3] ) * 2 / ROBOT_WH_D;
+end;
+
 
 
 procedure ConfigureCtrlModeRobotPosition;
@@ -280,17 +352,23 @@ begin
 
   iFREQDIVPOSCTRL := 0;
   trajectory_on := false;
-  SetRCValue(6,9,'Filename:');
-  SetRCValue(6,10,'#points:');
-  SetRCValue(7,8,'[LoadTraj]');
+  SetRCValue( 6, 9,'Filename:');
+  SetRCValue( 6,10,'#points:');
+  SetRCValue( 7, 8,'[LoadTraj]');
+  SetRCValue( 9, 9,'x (m):');
+  SetRCValue( 9,10,'y (m):');
+  SetRCValue( 9,11,'th (deg):');
+  SetRCValue(10, 8,'Goal:');
 
   ctrlff_on := true;
   SetRCValue(8,8,'[FFOnOff]');
   SetRCValue(8,9,'On');
 
-  robpData := pdGT;
+  //robpData := pdGT;
+  robpData := pdODO;
   SetRCValue(8,10,'[GT/ODO]');
-  SetRCValue(8,11,'sim2');
+  //SetRCValue(8,11,'sim2');
+  SetRCValue(8,11,'odometry');
 
   chart_type := ctPosXY;
   SetRCValue(4,11,'PosXY');
@@ -471,6 +549,21 @@ begin
   InitializeBuffers(i_global);
 end;
 
+function IsGoalReached(xf, yf, thf: double): boolean;
+begin
+  if ((Dist(xf - robp_r[1], yf - robp_r[2]) < GOAL_TOL_XY) AND
+      (Abs(NormalizeAngle(thf - robp_r[3])) < Deg(GOAL_TOL_TH))) then begin
+    result := true;
+    SetRCValue(10,12,'OK!');
+  end else begin
+    result := false;
+    SetRCValue(10,12,'Not reached');
+  end;
+  SetRCValue(10, 9,format(DOUBLEFORMAT,[ xf ]));
+  SetRCValue(10,10,format(DOUBLEFORMAT,[ yf ]));
+  SetRCValue(10,11,format(DOUBLEFORMAT,[ Deg(thf) ]));
+end;
+
 procedure CtrlModeRobotPosition;
 var
   i,j: integer;
@@ -543,10 +636,20 @@ begin
   iFREQDIVPOSCTRL := iFREQDIVPOSCTRL + 1;
   // - position controllers
   if ( iFREQDIVPOSCTRL >= FREQDIVPOSCTRL) then begin
-    // - test motors
-    wmot_r[iMOT1] := 1;
-    wmot_r[iMOT2] := -1;
-    wmot_r[iMOT3] := 0;
+
+    // - test PD and FF position controllers
+    robp_r[1] := 0;
+    robp_r[2] := 0;
+    robp_r[3] := 0;
+    robp_r_1deriv[1] := 0;
+    robp_r_1deriv[2] := 0;
+    robp_r_1deriv[3] := 0;
+    robp_r_2deriv[1] := 0;
+    robp_r_2deriv[2] := 0;
+    robp_r_2deriv[3] := 0;
+    // - position control
+    RobotPosControllers;
+
   end;
   // - motors PI controllers
   PIMotorsControllers;
@@ -782,7 +885,6 @@ begin
     end else begin
       debug_on := true;
       SetRCValue(1,9,'On');
-      SetRCValue(2,12,'');
     end;
   end;
   // - log
@@ -813,6 +915,11 @@ begin
     ChartSeriesSetColor(0,3,clGreen);
     ChartSeriesSetColor(0,4,clBlue);
     ChartSeriesSetColor(0,5,clBlue);
+  end;
+  // - reset
+  if (RCButtonPressed(1,3)) then begin
+    ResetRobotInfo;
+    ConfigureCtrlModeRobotPosition;
   end;
 
 
@@ -986,6 +1093,7 @@ begin
   BesselPrototypePDctrl(RangeToMatrix(27,2,2,3),GetRCValue(30,2),RangeToMatrix(30,5,2,2));
 
   // Interaction with the user
+  SetRCValue(1,3,'[RESET]');
   SetRCValue(1,8,'[DEBUG]');
   SetRCValue(2,8 ,'[LogOnOff]');
   SetRCValue(2,10,'[LogSave]');
