@@ -119,42 +119,42 @@
     <cell r="34" c="3" text="0.0679164050154" />
     <cell r="33" c="4" text="3.40472947905" />
     <cell r="34" c="4" text="0.00236792968417" />
-    <cell r="3" c="2" text="0.00015165" />
-    <cell r="4" c="2" text="-0.000026515" />
-    <cell r="5" c="2" text="-0.011181" />
-    <cell r="3" c="4" text="0.00037458" />
-    <cell r="4" c="4" text="0.00068939" />
-    <cell r="5" c="4" text="0.00013565" />
-    <cell r="3" c="6" text="0.00037445" />
-    <cell r="4" c="6" text="0.00068947" />
-    <cell r="5" c="6" text="0.00013565" />
-    <cell r="7" c="2" text="13" />
-    <cell r="8" c="2" text="0.66473" />
-    <cell r="9" c="2" text="-0.001875" />
-    <cell r="10" c="2" text="0.4128" />
-    <cell r="11" c="2" text="0.41812" />
-    <cell r="12" c="2" text="0.44754" />
-    <cell r="7" c="3" text="7" />
-    <cell r="8" c="3" text="0.35793" />
-    <cell r="9" c="3" text="-0.0044251" />
-    <cell r="10" c="3" text="0.34925" />
-    <cell r="11" c="3" text="0.43782" />
-    <cell r="12" c="3" text="0.51875" />
-    <cell r="7" c="4" text="4" />
-    <cell r="8" c="4" text="0.20453" />
-    <cell r="9" c="4" text="-0.0044257" />
-    <cell r="10" c="4" text="-0.012405" />
-    <cell r="11" c="4" text="0.097086" />
-    <cell r="12" c="4" text="0.1693" />
-    <cell r="23" c="2" text="0.0009492" />
-    <cell r="23" c="4" text="0.000090336" />
-    <cell r="23" c="6" text="0.0090336" />
-    <cell r="24" c="2" text="0.00014661" />
-    <cell r="24" c="4" text="0.00010431" />
-    <cell r="24" c="6" text="0.010431" />
-    <cell r="25" c="2" text="-0.048528" />
-    <cell r="25" c="4" text="0.061298" />
-    <cell r="25" c="6" text="0.10699" />
+    <cell r="3" c="2" text="0.00018864" />
+    <cell r="4" c="2" text="-0.0010532" />
+    <cell r="5" c="2" text="0.04785" />
+    <cell r="3" c="4" text="-0.000044086" />
+    <cell r="4" c="4" text="0.00026317" />
+    <cell r="5" c="4" text="0.000091658" />
+    <cell r="3" c="6" text="-0.000043866" />
+    <cell r="4" c="6" text="0.0002632" />
+    <cell r="5" c="6" text="0.000091658" />
+    <cell r="7" c="2" text="0" />
+    <cell r="8" c="2" text="0" />
+    <cell r="9" c="2" text="-0.0015922" />
+    <cell r="10" c="2" text="-0.0048938" />
+    <cell r="11" c="2" text="-0.58598" />
+    <cell r="12" c="2" text="-0.97368" />
+    <cell r="7" c="3" text="0" />
+    <cell r="8" c="3" text="0" />
+    <cell r="9" c="3" text="-0.00037134" />
+    <cell r="10" c="3" text="0.0068483" />
+    <cell r="11" c="3" text="-0.26105" />
+    <cell r="12" c="3" text="-0.43921" />
+    <cell r="7" c="4" text="0" />
+    <cell r="8" c="4" text="0" />
+    <cell r="9" c="4" text="-0.0008458" />
+    <cell r="10" c="4" text="-0.0034349" />
+    <cell r="11" c="4" text="-0.94228" />
+    <cell r="12" c="4" text="-1.5684" />
+    <cell r="23" c="2" text="-0.0037015" />
+    <cell r="23" c="4" text="0" />
+    <cell r="23" c="6" text="0" />
+    <cell r="24" c="2" text="0.0023323" />
+    <cell r="24" c="4" text="0" />
+    <cell r="24" c="6" text="0" />
+    <cell r="25" c="2" text="-0.14303" />
+    <cell r="25" c="4" text="0" />
+    <cell r="25" c="6" text="0" />
     <cell r="1" c="8" text="[DEBUG]" />
     <cell r="1" c="9" text="On" />
     <cell r="2" c="8" text="[LogOnOff]" />
@@ -173,17 +173,65 @@
     <cell r="8" c="9" text="On" />
     <cell r="8" c="10" text="[GT/ODO]" />
     <cell r="8" c="11" text="sim2" />
-    <cell r="7" c="9" text="example_s_5cm" />
+    <cell r="7" c="9" text="example_square_5cm" />
     <cell r="6" c="10" text="#points:" />
-    <cell r="7" c="10" text="296" />
+    <cell r="7" c="10" text="161" />
     <cell r="1" c="3" text="[RESET]" />
     <cell r="9" c="9" text="x (m):" />
     <cell r="9" c="10" text="y (m):" />
     <cell r="9" c="11" text="th (deg):" />
     <cell r="10" c="8" text="Goal:" />
-    <cell r="10" c="12" text="Not reached" />
-    <cell r="10" c="9" text="10.478" />
-    <cell r="10" c="10" text="0.27376" />
+    <cell r="10" c="12" text="OK!" />
+    <cell r="10" c="9" text="0" />
+    <cell r="10" c="10" text="0" />
     <cell r="10" c="11" text="0" />
+    <cell r="11" c="8" text="Xref:" />
+    <cell r="12" c="8" text="FUTURE:" />
+    <cell r="13" c="8" text="(0):" />
+    <cell r="14" c="8" text="(1):" />
+    <cell r="15" c="8" text="(2):" />
+    <cell r="16" c="8" text="(3):" />
+    <cell r="17" c="8" text="(4):" />
+    <cell r="18" c="8" text="(5):" />
+    <cell r="19" c="8" text="(6):" />
+    <cell r="20" c="8" text="(7):" />
+    <cell r="21" c="8" text="(8):" />
+    <cell r="22" c="8" text="(9):" />
+    <cell r="12" c="9" text="x (m):" />
+    <cell r="13" c="9" text="0" />
+    <cell r="14" c="9" text="0" />
+    <cell r="15" c="9" text="0" />
+    <cell r="16" c="9" text="0" />
+    <cell r="17" c="9" text="0" />
+    <cell r="18" c="9" text="0" />
+    <cell r="19" c="9" text="0" />
+    <cell r="20" c="9" text="0" />
+    <cell r="21" c="9" text="0" />
+    <cell r="12" c="10" text="y (m):" />
+    <cell r="13" c="10" text="0" />
+    <cell r="14" c="10" text="0" />
+    <cell r="15" c="10" text="0" />
+    <cell r="16" c="10" text="0" />
+    <cell r="17" c="10" text="0" />
+    <cell r="18" c="10" text="0" />
+    <cell r="19" c="10" text="0" />
+    <cell r="20" c="10" text="0" />
+    <cell r="21" c="10" text="0" />
+    <cell r="12" c="11" text="th (deg):" />
+    <cell r="13" c="11" text="0" />
+    <cell r="14" c="11" text="0" />
+    <cell r="15" c="11" text="0" />
+    <cell r="16" c="11" text="0" />
+    <cell r="17" c="11" text="0" />
+    <cell r="18" c="11" text="0" />
+    <cell r="19" c="11" text="0" />
+    <cell r="20" c="11" text="0" />
+    <cell r="21" c="11" text="0" />
+    <cell r="11" c="9" text="0" />
+    <cell r="11" c="10" text="0" />
+    <cell r="22" c="9" text="0" />
+    <cell r="22" c="10" text="0" />
+    <cell r="22" c="11" text="0" />
+    <cell r="11" c="11" text="0" />
   </cells>
 </sheet>

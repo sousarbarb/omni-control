@@ -27,7 +27,7 @@ const
   PD_TAU_TH = 0.099488;
   PD_TSETT = 0.8;
   // Trajectory (DO NOT CHANGE THIS PARAMETERS)
-  NFUTURE = 5;
+  NFUTURE = 10;
   GOAL_TOL_XY = 0.05; // meters
   GOAL_TOL_TH = 2.5;  // degrees
   XVEL = 0.5;
@@ -348,6 +348,8 @@ end;
 
 
 procedure ConfigureCtrlModeRobotPosition;
+var
+  i: integer;
 begin
   ResetRobotInfo;
 
@@ -360,6 +362,14 @@ begin
   SetRCValue( 9,10,'y (m):');
   SetRCValue( 9,11,'th (deg):');
   SetRCValue(10, 8,'Goal:');
+  SetRCValue(11, 8,'Xref:');
+  SetRCValue(12, 8,'FUTURE:');
+  SetRCValue(12, 9,'x (m):');
+  SetRCValue(12,10,'y (m):');
+  SetRCValue(12,11,'th (deg):');
+  for i:=0 to NFUTURE-1 do begin
+    SetRCValue(13+i,8, format('(%d):',[ i ]) );
+  end;
 
   ctrlff_on := true;
   SetRCValue(8,8,'[FFOnOff]');
@@ -494,6 +504,13 @@ begin
   matApproxCoeffTempY := Mmult( matXinv_vel , matBuffFutureY  );
   Msetv(matFutTrajApproxCoeffX_1deriv,0,0, Mgetv(matApproxCoeffTempX,1,0)  );
   Msetv(matFutTrajApproxCoeffY_1deriv,0,0, Mgetv(matApproxCoeffTempY,1,0)  );
+
+  // Debug
+  if (debug_on) then begin
+    MatrixToRange(13, 9,matBuffFutureX);
+    MatrixToRange(13,10,matBuffFutureY);
+    MatrixToRange(13,11,matBuffFutureTH);
+  end;
 end;
 
 procedure ReadTrajectoryFile;
@@ -628,6 +645,13 @@ begin
   robp_r_2deriv[1] := robp_r_2deriv[1] * XVEL / (Tscript*FREQDIVPOSCTRL);
   robp_r_2deriv[2] := robp_r_2deriv[2] * XVEL / (Tscript*FREQDIVPOSCTRL);
   robp_r_2deriv[3] := robp_r_2deriv[3] * XVEL / (Tscript*FREQDIVPOSCTRL);
+
+  // Debug
+  if (debug_on) then begin
+    SetRCValue(11, 9,format(DOUBLEFORMAT,[ robp_r[1]      ]));
+    SetRCValue(11,10,format(DOUBLEFORMAT,[ robp_r[2]      ]));
+    SetRCValue(11,11,format(DOUBLEFORMAT,[ Deg(robp_r[3]) ]));
+  end;
 end;
 
 procedure CtrlModeRobotPosition;
@@ -705,9 +729,10 @@ begin
 
     // - check goal
     if (trajectory_on) then begin
-      if (IsGoalReached(Mgetv(trajectory,trajectory_numpoints-1,0),
-                        Mgetv(trajectory,trajectory_numpoints-1,1),
-                        Mgetv(trajectory,trajectory_numpoints-1,2))) then begin
+      if ((IsGoalReached(Mgetv(trajectory,trajectory_numpoints-1,0),
+                         Mgetv(trajectory,trajectory_numpoints-1,1),
+                         Mgetv(trajectory,trajectory_numpoints-1,2))) AND
+           (i_global >= trajectory_numpoints-1)) then begin
         trajectory_on := false;
       end;
     end;
