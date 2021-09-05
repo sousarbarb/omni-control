@@ -52,9 +52,9 @@
       <ID value='wheel_1' kind='omni'/>
       <mass value='0.660'/>
       <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
-      <size x='wheel_radius' z='0.042'/>
-      <pos x='centerdist * cos(pi()/3)' y='centerdist * sin(pi()/3)' z='wheel_radius'/>
-      <rot_deg x='0' y='90' z='60'/>
+      <size x='wheel_radius' z='0.0042'/>
+      <pos x='centerdist * cos(-pi()/3)' y='centerdist * sin(-pi()/3)' z='wheel_radius'/>
+      <rot_deg x='90' y='0' z='30'/>
       <!--<color_rgb r='128' g='0' b='0'/>-->
       <!--<texture name='MatFeup' scale='2'/>-->
     </cylinder>
@@ -63,9 +63,9 @@
       <ID value='wheel_2' kind='omni'/>
       <mass value='0.660'/>
       <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
-      <size x='wheel_radius' z='0.042'/>
-      <pos x='centerdist * cos(-pi()/3)' y='centerdist * sin(-pi()/3)' z='wheel_radius'/>
-      <rot_deg x='0' y='90' z='-60'/>
+      <size x='wheel_radius' z='0.0042'/>
+      <pos x='centerdist * cos(pi()/3)' y='centerdist * sin(pi()/3)' z='wheel_radius'/>
+      <rot_deg x='90' y='0' z='150'/>
       <!--<color_rgb r='128' g='0' b='0'/>-->
       <!--<texture name='MatFeup' scale='2'/>-->
     </cylinder>
@@ -74,7 +74,7 @@
       <ID value='wheel_3' kind='omni'/>
       <mass value='0.660'/>
       <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
-      <size x='wheel_radius' z='0.042'/>
+      <size x='wheel_radius' z='0.0042'/>
       <pos x='centerdist * cos(pi())' y='centerdist * sin(pi())' z='wheel_radius'/>
       <rot_deg x='0' y='90' z='180'/>
       <!--<color_rgb r='128' g='0' b='0'/>-->
@@ -112,7 +112,7 @@
 
       <connect B1='Body' B2='wheel_1'/>
       <pos x='0' y='0' z='wheel_radius'/>
-      <axis x='cos(pi()/3)' y='sin(pi()/3)' z='0'/>
+      <axis x='cos(-pi()/3)' y='sin(-pi()/3)' z='0'/>
       <type value='Hinge'/>
     </joint>
 
@@ -127,7 +127,7 @@
 
       <connect B1='Body' B2='wheel_2'/>
       <pos x='0' y='0' z='wheel_radius'/>
-      <axis x='cos(-pi()/3)' y='sin(-pi()/3)' z='0'/>
+      <axis x='cos(pi()/3)' y='sin(pi()/3)' z='0'/>
       <type value='Hinge'/>
     </joint>
 
