@@ -78,6 +78,9 @@ var
   robp_loc_r_1deriv,robp_loc_r_2deriv: array [1..3] of double; // x   , y   , th
   // Trajectory
   trajectory_on: boolean;
+  trajectory_file: TStringList;
+  trajectory_numpoints: integer;
+  trajectory: Matrix;
   i_global: integer;
   t_global, u_ref: double;
   matX_acc, matXinv_acc, matXtX_acc, matXtXinv_acc: Matrix;  // (to compute the acceleration)
@@ -234,6 +237,59 @@ begin
   ChartSeriesSetColor(0,5,clBlue);
 end;
 
+procedure ReadTrajectoryFile;
+var
+  i,j: integer;
+  line_file: TStringList;
+begin
+  trajectory_on := true;
+
+  // If the stringlist has memory allocated, free the object
+  if (trajectory_file <> nil) then begin
+    trajectory_file.Clear;
+    trajectory_file.Free;
+  end;
+
+  // Load file
+  trajectory_file := TStringList.Create;
+  trajectory_file.LoadFromFile('trajectories/' + GetRCText(7,9) + '.txt');
+
+  // Initialization
+  trajectory_numpoints := trajectory_file.Count;
+  trajectory := Mzeros(trajectory_numpoints,3);
+
+  // Process trajectory (trajectory + 1st future points)
+  for i:=0 to (trajectory_numpoints-1) do begin
+    // Print the entire line (see Output in the Editor window)
+    //WriteLn(trajectory_file.Strings[i]);
+
+    // Process each cell of the CSV format
+    if (line_file <> nil) then begin
+      line_file.Clear;
+      line_file.Free;
+    end;
+    line_file := TStringList.Create;
+    line_file.Delimiter     := ',';
+    line_file.DelimitedText := trajectory_file.Strings[i];
+    
+    // Associate point of the trajectory
+    Msetv(trajectory,i,0, StrToFloat( line_file.Strings[0] ) );  // X
+    Msetv(trajectory,i,1, StrToFloat( line_file.Strings[1] ) );  // Y
+    Msetv(trajectory,i,2, StrToFloat( line_file.Strings[2] ) );  // Theta
+  end;
+  // Free allocated space, if necessary
+  if (line_file <> nil) then begin
+    line_file.Clear;
+    line_file.Free;
+  end;
+
+  // Set the first future
+  i_global := 0;
+  t_global := 0;
+  time_var := 0;
+  //InitializeBuffers(i_global);
+end;
+
 procedure CtrlModeRobotPosition;
 var
   i,j: integer;
@@ -287,7 +343,7 @@ begin
   end;
   // - load trajectory
   if (RCButtonPressed(7,8)) then begin
-    //ReadTrajectoryFile;
+    ReadTrajectoryFile;
 
     time_var := 0;
     ChartSeriesSetCount(0,NUM_MOT*2);
