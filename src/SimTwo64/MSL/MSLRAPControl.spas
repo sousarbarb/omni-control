@@ -30,7 +30,7 @@ const
   NFUTURE = 10;
   GOAL_TOL_XY = 0.05; // meters
   GOAL_TOL_TH = 2.5;  // degrees
-  XVEL = 0.75;
+  XVEL = 1;
 
 
 
