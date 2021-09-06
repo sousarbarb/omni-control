@@ -30,7 +30,7 @@ const
   NFUTURE = 10;
   GOAL_TOL_XY = 0.05; // meters
   GOAL_TOL_TH = 2.5;  // degrees
-  XVEL = 0.5;
+  XVEL = 0.75;
 
 
 
@@ -357,6 +357,7 @@ begin
   trajectory_on := false;
   SetRCValue( 6, 9,'Filename:');
   SetRCValue( 6,10,'#points:');
+  SetRCValue( 6,12,'state:');
   SetRCValue( 7, 8,'[LoadTraj]');
   SetRCValue( 9, 9,'x (m):');
   SetRCValue( 9,10,'y (m):');
@@ -371,18 +372,9 @@ begin
     SetRCValue(13+i,8, format('(%d):',[ i ]) );
   end;
 
-  ctrlff_on := true;
   SetRCValue(8,8,'[FFOnOff]');
-  SetRCValue(8,9,'On');
-
-  robpData := pdGT;
-  //robpData := pdODO;
   SetRCValue(8,10,'[GT/ODO]');
-  SetRCValue(8,11,'sim2');
-  //SetRCValue(8,11,'odometry');
 
-  chart_type := ctPosXY;
-  SetRCValue(4,11,'PosXY');
   ChartSeriesSetCount(0,NUM_MOT*2);
   ChartSeriesSetColor(0,0,clRed);
   ChartSeriesSetColor(0,1,clRed);
@@ -684,6 +676,9 @@ begin
     ChartSeriesSetColor(0,3,clGreen);
     ChartSeriesSetColor(0,4,clBlue);
     ChartSeriesSetColor(0,5,clBlue);
+    for i := 0 to 5 do begin
+      ChartSeriesClear(0,i);
+    end;
   end;
   // - position data mode (ground-truth vs odometry)
   if (RCButtonPressed(8,10)) then begin
@@ -707,6 +702,8 @@ begin
   end;
   // - load trajectory
   if (RCButtonPressed(7,8)) then begin
+    ResetRobotInfo;
+    ConfigureCtrlModeRobotPosition;
     ReadTrajectoryFile;
 
     time_var := 0;
@@ -717,6 +714,9 @@ begin
     ChartSeriesSetColor(0,3,clGreen);
     ChartSeriesSetColor(0,4,clBlue);
     ChartSeriesSetColor(0,5,clBlue);
+    for i := 0 to 5 do begin
+      ChartSeriesClear(0,i);
+    end;
   end;
 
 
@@ -739,6 +739,9 @@ begin
     // - set position references
     if (trajectory_on) then begin
       SetPositionControllerFFReferences;
+      SetRCValue(7,12,'GOOO!!!');
+    end else begin
+      SetRCValue(7,12,'END...');
     end;
     // - position control
     RobotPosControllers;
@@ -962,6 +965,8 @@ end;
 
 { CONTROL }
 procedure Control;
+var
+  i: integer;
 begin
   Tscript  := ScriptPeriod;
   time_var := time_var + Tscript;
@@ -999,6 +1004,9 @@ begin
     end else begin
       chart_on := true;
       SetRCValue(4,9,'On');
+      for i := 0 to 5 do begin
+        ChartSeriesClear(0,i);
+      end;
     end;
     time_var := 0;
     ChartSeriesSetCount(0,NUM_MOT*2);
@@ -1067,6 +1075,20 @@ begin
   SetMotorControllerState(iROBOT,iMOT3,false);
 
   // Initial mode
+  // - ff mode
+  ctrlff_on := true;
+  SetRCValue(8,9,'On');
+
+  // - data to be used as robot's pose
+  robpData := pdGT;
+  //robpData := pdODO;
+  SetRCValue(8,11,'sim2');
+  //SetRCValue(8,11,'odometry');
+  
+  // - graph mode
+  chart_type := ctPosXY;
+  SetRCValue(4,11,'PosXY');
+
   ConfigureCtrlModeRobotPosition;
 
   // Reset sheet 
