@@ -14,7 +14,7 @@ function [Xpos] = PositionInterpolationLinear(trajectory, dist_points)
       temppoint    = Xpos(j,1:2);
       temppoint(1) = temppoint(1) + dist_points*cos(dir);
       temppoint(2) = temppoint(2) + dist_points*sin(dir);
-      if sqrt( (trajectory(i,2) - temppoint(2))^2 + (trajectory(i,1) - temppoint(1))^2 ) < 0.99*dist_points
+      if Dist( trajectory(i,:) , temppoint ) < 0.99*dist_points
         Xpos = [ Xpos ; trajectory(i,1:2) ];
         j = j+1;
         break;
