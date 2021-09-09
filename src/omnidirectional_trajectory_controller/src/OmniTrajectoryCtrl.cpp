@@ -32,11 +32,39 @@ double NormAngle(const double angle) {
 // Public methods
 
 OmniTrajectoryCtrl::OmniTrajectoryCtrl(
-    uint32_t future_buffer_size, double tol_goal_xy, double tol_goal_th)
+    uint32_t future_buffer_size, double tol_goal_xy, double tol_goal_th,
+    double xvel,
+    double pd_kc_v, double pd_kc_vn, double pd_kc_w,
+    double pd_td_v, double pd_td_vn, double pd_td_w,
+    double model_kp_v , double model_kp_vn , double model_kp_w,
+    double model_tau_v, double model_tau_vn, double model_tau_w)
     : trajectory_on(false) , i_global(0) , t_global(0), u_ref(0) ,
-      goal_tol_xy(tol_goal_xy) , goal_tol_th(tol_goal_th) {
+      goal_tol_xy(tol_goal_xy) , goal_tol_th(tol_goal_th) , x_vel(xvel) {
   // Initialize future and least-squares matrices
   InitializeL2Matrices(future_buffer_size);
+
+  // Initialize the gains for the pd controllers
+  pd_kc.diagonal() << pd_kc_v , pd_kc_vn , pd_kc_w;
+  pd_td.diagonal() << pd_td_v , pd_td_vn , pd_td_w;
+
+  // Initialize the model of the robot's velocity
+  model_1_kp.diagonal() << 1 / model_kp_v , 1 / model_kp_vn , 1 / model_kp_w;
+  model_tau_kp.diagonal() << model_tau_v  / model_kp_v ,
+                             model_tau_vn / model_kp_vn ,
+                             model_tau_w  / model_kp_w;
+
+  // Debug
+#ifdef DEBUG_OMNITRAJECTORYCTRL
+  std::cout << std::endl << "[OmniTrajectoryCtrl]" << std::endl;
+  std::cout << "PD Ctrl Kc Diagonal Matrix:" << std::endl
+            << pd_kc.diagonal() << std::endl;
+  std::cout << "PD Ctrl Td Diagonal Matrix:" << std::endl
+            << pd_td.diagonal() << std::endl;
+  std::cout << "Model Diagonal 1 / Kp Matrix:" << std::endl
+            << model_1_kp.diagonal() << std::endl;
+  std::cout << "Model Diagonal Tau / Kp Matrix:" << std::endl
+            << model_tau_kp.diagonal() << std::endl;
+#endif
 }
 
 bool OmniTrajectoryCtrl::LoadTrajectoryFile(std::string &filename) {
@@ -144,6 +172,16 @@ void OmniTrajectoryCtrl::OmniRobotCtrl(double &v_r, double &vn_r,
       trajectory_on = false;
 
   // Set position references
+  if (trajectory_on)
+    SetPositionControllerFFReferences();
+
+  // Position control
+  RobotPosControllers();
+
+  // Set reference velocity of the robot
+  v_r  = rob_v_r(0);
+  vn_r = rob_v_r(1);
+  w_r  = rob_v_r(2);
 }
 
 void OmniTrajectoryCtrl::UpdateRobot(double rob_p_x, double rob_p_y,
@@ -161,7 +199,7 @@ void OmniTrajectoryCtrl::UpdateRobotPosition(double rob_p_x, double rob_p_y,
   rob_p(2) = rob_p_th;
 
   // Compute position in the robot's local coordinate frame
-  RotGlobal2Local(rob_p_loc, rob_p);
+  RotGlobal2Local(rob_p, rob_p_loc);
 }
 
 void OmniTrajectoryCtrl::UpdateRobotVelocity(double rob_v_v, double rob_v_vn,
@@ -310,14 +348,82 @@ bool OmniTrajectoryCtrl::IsGoalReached() {
   }
 }
 
+void OmniTrajectoryCtrl::RobotPosControllers() {
+  // Global > Local coordinate frame
+  RotGlobal2Local(rob_p_r   , rob_p_loc_r   );
+  RotGlobal2Local(rob_p_r_1d, rob_p_loc_r_1d);
+  RotGlobal2Local(rob_p_r_2d, rob_p_loc_r_2d);
+
+  // PD controllers
+  RobotPosPDControllers();
+
+  // FF controllers
+  RobotPosFFControllers();
+
+  // Velocity of the robot
+  rob_v_r = rob_v_r_pd + rob_v_r_ff;
+}
+
+void OmniTrajectoryCtrl::RobotPosFFControllers() {
+  // Robot velocity
+  rob_v_r_ff = model_tau_kp * rob_p_loc_r_2d + model_1_kp * rob_p_loc_r_1d;
+}
+
+void OmniTrajectoryCtrl::RobotPosPDControllers() {
+  // Errors (proportional and derivative)
+  rob_p_loc_eprev  = rob_p_loc_e;
+  rob_p_loc_e      = rob_p_loc_r - rob_p_loc;
+  rob_p_loc_ederiv = rob_p_loc_e - rob_p_loc_eprev;
+  // - special case of orientation
+  rob_p_loc_e(2)      = NormAngle(rob_p_loc_e(2));
+  rob_p_loc_ederiv(2) = NormAngle(rob_p_loc_ederiv(2));
+  // - frequency multiplication
+  rob_p_loc_ederiv = rob_p_loc_ederiv * kFreqPosCtrl;
+
+  // Robot velocity
+  rob_v_r_pd = pd_kc * ( rob_p_loc_e + pd_td * rob_p_loc_ederiv );
+}
+
 void OmniTrajectoryCtrl::RotGlobal2Local(Eigen::Vector3d &x_global,
                                          Eigen::Vector3d &x_local) {
   // Initialize rotation matrix
   Eigen::AngleAxis<double> rot_g2l =
-      Eigen::AngleAxis<double>(-x_global(2), Eigen::Vector3d::UnitZ());
+      Eigen::AngleAxis<double>(-rob_p(2), Eigen::Vector3d::UnitZ());
 
   // Compute the vector in the global coordinate frame
   x_local = rot_g2l * x_global;
+}
+
+void OmniTrajectoryCtrl::SetPositionControllerFFReferences() {
+  // Initialization
+  double u_0, u_f;
+
+  // Global time
+  t_global = t_global + (1.0 / kFreqPosCtrl);
+  // Reference indexes
+  u_ref = t_global * x_vel * kFreqPosCtrl - static_cast<double>(i_global);
+  while (u_ref >= 1) {
+    i_global++;
+    u_ref = t_global * x_vel * kFreqPosCtrl - static_cast<double>(i_global);
+  }
+  InitializeBuffers(i_global);
+
+  // Interpolation
+  u_0 = std::floor(u_ref) >= 0? std::floor(u_ref) : 0;
+  u_f = u_0 + 1;
+
+  // Set reference
+  // - position (interpolation):
+  rob_p_r =
+      future_buffer.row(u_0).transpose() + (
+      future_buffer.row(u_f).transpose() - future_buffer.row(u_0).transpose()) *
+          (u_ref - u_0);
+  // - first derivative:
+  rob_p_r_1d = future_approx_coeff_1d.transpose();
+  rob_p_r_1d = rob_p_r_1d * x_vel * kFreqPosCtrl;
+  // - second derivative:
+  rob_p_r_2d = future_approx_coeff_2d.transpose();
+  rob_p_r_2d = rob_p_r_2d * x_vel * kFreqPosCtrl;
 }
 
 }  // omnidirectional_trajectory_controller

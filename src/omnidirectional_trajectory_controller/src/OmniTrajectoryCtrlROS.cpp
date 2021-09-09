@@ -44,7 +44,10 @@ bool OmniTrajectoryCtrlROS::ReadParameters() {
 
   // Update OmniTrajectoryCtrl object
   omni_ctrl_ = new OmniTrajectoryCtrl(
-      kNFuture, kGoalTolXY, kGoalTolTh);
+      kNFuture, kGoalTolXY, kGoalTolTh, xXvel,
+      kPDCtrlKcV, kPDCtrlKcVn, kPDCtrlKcW, kPDCtrlTdV, kPDCtrlTdVn, kPDCtrlTdW,
+      kRobModelKpV , kRobModelKpVn , kRobModelKpW,
+      kRobModelTauV, kRobModelTauVn, kRobModelTauW);
 
   // Test load trajectory
   std::string filename =
