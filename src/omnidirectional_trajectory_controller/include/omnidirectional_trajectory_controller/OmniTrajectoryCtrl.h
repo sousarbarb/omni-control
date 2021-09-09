@@ -43,7 +43,6 @@ struct OmniTrajectoryCtrl {
 
   // Trajectory
   bool trajectory_on;
-  int32_t trajectory_numpoints;
   uint32_t i_global;
   double t_global, u_ref;
   Eigen::Matrix<double,Eigen::Dynamic,3> trajectory;
@@ -52,15 +51,23 @@ struct OmniTrajectoryCtrl {
   Eigen::Matrix<double,2,Eigen::Dynamic> future_approx_l2_vel;
   Eigen::Matrix<double,1,Eigen::Dynamic> future_approx_l2_acc;
 
+  // Parameters
+  double goal_tol_xy, goal_tol_th;
+
  public:
-  explicit OmniTrajectoryCtrl(uint32_t future_buffer_size);
-  bool LoadTrajectoryFile(const std::string filename);
+  explicit OmniTrajectoryCtrl(
+      uint32_t future_buffer_size, double tol_goal_xy, double tol_goal_th);
+  bool LoadTrajectoryFile(std::string &filename);
   void OmniRobotCtrl(double &v_r, double &vn_r, double &w_r);
-  void UpdateRobotInfo(double rob_p_x, double rob_p_y , double rob_p_th,
-                       double rob_v_v, double rob_v_vn, double rob_v_w );
+  void UpdateRobot(double rob_p_x, double rob_p_y , double rob_p_th,
+                   double rob_v_v, double rob_v_vn, double rob_v_w);
+  void UpdateRobotPosition(double rob_p_x, double rob_p_y , double rob_p_th);
+  void UpdateRobotVelocity(double rob_v_v, double rob_v_vn, double rob_v_w);
 
  private:
+  void InitializeBuffers(uint32_t &index_0);
   void InitializeL2Matrices(uint32_t future_buffer_size);
+  bool IsGoalReached();
   static void RotGlobal2Local(Eigen::Vector3d &x_global,
                               Eigen::Vector3d &x_local);
 };

@@ -22,8 +22,11 @@ OmniTrajectoryCtrlROS::OmniTrajectoryCtrlROS(ros::NodeHandle &nh)
 
 void OmniTrajectoryCtrlROS::Execute() {
   while (ros::ok()) {
-    //
+    // Update robot info saved in the controller state
+    //omni_ctrl_->UpdateRobotInfo();
 
+    // Execute 1 cycle of positioning control
+    //omni_ctrl_->OmniRobotCtrl();
 
     // Spin/sleep to process callbacks and subscription of messages
     ros::spinOnce();
@@ -40,10 +43,14 @@ bool OmniTrajectoryCtrlROS::ReadParameters() {
   // ...
 
   // Update OmniTrajectoryCtrl object
-  omni_ctrl_ = new OmniTrajectoryCtrl(kNFuture);
-  omni_ctrl_->LoadTrajectoryFile(
-      "/home/sousarbarb/catkin_ws/src/omnidirectional_trajectory_controller/"
-      "input/square_vn-1.0.txt");
+  omni_ctrl_ = new OmniTrajectoryCtrl(
+      kNFuture, kGoalTolXY, kGoalTolTh);
+
+  // Test load trajectory
+  std::string filename =
+      "/home/sousarbarb/catkin_ws/src/omnidirectional_trajectory_controller"
+      "/input/square_vn-1.0.txt";
+  omni_ctrl_->LoadTrajectoryFile(filename);
 
   return true;
 }
