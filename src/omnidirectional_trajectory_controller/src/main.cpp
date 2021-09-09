@@ -4,9 +4,8 @@
 
 int main(int argc, char *argv[]) {
   ros::init(argc,argv,"omnidirectional_trajectory_controller");
-  ros::NodeHandle nh;
 
-  omnidirectional_trajectory_controller::OmniTrajectoryCtrlROS omni_ctrl(nh);
+  omnidirectional_trajectory_controller::OmniTrajectoryCtrlROS omni_ctrl;
 
   omni_ctrl.Execute();
 

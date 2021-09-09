@@ -68,6 +68,7 @@ public:
       double model_tau_v, double model_tau_vn, double model_tau_w);
   bool LoadTrajectoryFile(std::string &filename);
   void OmniRobotCtrl(double &v_r, double &vn_r, double &w_r);
+  void Reset();
   void UpdateRobot(double rob_p_x, double rob_p_y , double rob_p_th,
                    double rob_v_v, double rob_v_vn, double rob_v_w);
   void UpdateRobotPosition(double rob_p_x, double rob_p_y , double rob_p_th);

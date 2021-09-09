@@ -184,6 +184,30 @@ void OmniTrajectoryCtrl::OmniRobotCtrl(double &v_r, double &vn_r,
   w_r  = rob_v_r(2);
 }
 
+void OmniTrajectoryCtrl::Reset() {
+  for (uint32_t i=0; i<3; i++) {
+    rob_p_loc(i) = 0;
+    rob_p_loc_r(i) = 0;
+    rob_p_loc_e(i) = 0;
+    rob_p_loc_eprev(i) = 0;
+    rob_p_loc_ederiv(i) = 0;
+    rob_p_loc_r_1d(i) = 0;
+    rob_p_loc_r_2d(i) = 0;
+    rob_p(i) = 0;
+    rob_p_r(i) = 0;
+    rob_p_r_1d(i) = 0;
+    rob_p_r_2d(i) = 0;
+    rob_v(i) = 0;
+    rob_v_r(i) = 0;
+    rob_v_r_pd(i) = 0;
+    rob_v_r_ff(i) = 0;
+  }
+  trajectory_on = false;
+  i_global = 0;
+  t_global = 0;
+  u_ref = 0;
+}
+
 void OmniTrajectoryCtrl::UpdateRobot(double rob_p_x, double rob_p_y,
                                      double rob_p_th, double rob_v_v,
                                      double rob_v_vn, double rob_v_w) {
