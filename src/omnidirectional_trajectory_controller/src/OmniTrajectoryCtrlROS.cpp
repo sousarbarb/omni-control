@@ -23,6 +23,9 @@ OmniTrajectoryCtrlROS::OmniTrajectoryCtrlROS()
                             &OmniTrajectoryCtrlROS::SubOdom, this);
 
   // Services
+  srv_load_trajectory = nh_.advertiseService(
+      "load_trajectory",
+      &OmniTrajectoryCtrlROS::SrvLoadTrajectory, this);
 
   // Debug
   ROS_INFO("[OMNI_CTRL] Node launched successfully launched.");
@@ -116,6 +119,12 @@ void OmniTrajectoryCtrlROS::SubOdom(const nav_msgs::Odometry::ConstPtr &msg) {
   ROS_DEBUG("[OMNI_CTRL] V  : %lf \t %lf \t %lf",
             msg->twist.twist.linear.x, msg->twist.twist.linear.y,
             msg->twist.twist.angular.z);
+}
+
+bool OmniTrajectoryCtrlROS::SrvLoadTrajectory(
+    omnidirectional_trajectory_controller::LoadTrajectory::Request &request,
+    omnidirectional_trajectory_controller::LoadTrajectory::Response &response) {
+  return omni_ctrl_->LoadTrajectoryFile(request.filename);
 }
 
 }  // omnidirectional_trajectory_controller
