@@ -36,11 +36,11 @@ void OmniTrajectoryCtrlROS::Execute() {
   double v, vn, w;
 
   while (ros::ok()) {
-    // Update robot info saved in the controller state
-    //omni_ctrl_->UpdateRobotInfo();
-
     // Execute 1 cycle of positioning control
     omni_ctrl_->OmniRobotCtrl(v, vn, w);
+
+    // Publish the computed velocity of the robot (based on the desired pose)
+    PubCmdVel(v, vn, w);
 
     // Spin/sleep to process callbacks and subscription of messages
     ros::spinOnce();
