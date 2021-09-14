@@ -7,7 +7,7 @@ clc
 % Filename to save the trajectory file (format: CSV - "x m,y m,th rad")
 % filename = '../SimTwo64/MSL/trajectories/square_vn-1.0.txt';
 % filename = '../SimTwo64/MSL/trajectories/square-th_vn-1.0.txt';
-% filename = '../SimTwo64/MSL/trajectories/s_vn-1.0.txt';
+filename = '../SimTwo64/MSL/trajectories/s_vn-1.0_r-1.0.txt';
 
 % Parameters
 parameters.Tctrl = 0.04;        % period of the position controllers (s)
@@ -18,13 +18,13 @@ parameters.acc_down = 1.0;      % maximum deceleration when approaching (m/s^2)
 parameters.tol_xy_ctrl = 0.10;  % distance tolerance of the controller (m)
 
 % Trajectory
-trajectory = [
-  0 0 0;
-  2 0 0;
-  2 2 0;
-  0 2 0;
-  0 0 0;
-];
+% trajectory = [
+%   0 0 0;
+%   2 0 0;
+%   2 2 0;
+%   0 2 0;
+%   0 0 0;
+% ];
 
 % trajectory = [
 %   0 0 0;
@@ -34,15 +34,16 @@ trajectory = [
 %   0 0 0;
 % ];
 
-% delta_theta = deg2rad(1.3);
-% theta = pi:-delta_theta:delta_theta;
-% R     = 1.75;
-% trajectory = [
-%   R*cos(theta')+1*R ,  R*sin(theta') , 0*theta' ;
-%   R*cos(theta')+3*R , -R*sin(theta') , 0*theta' ;
+R = 1.0;
+delta_theta = 0.04 / R; %deg2rad(1);
+theta = pi:-delta_theta:delta_theta;
+trajectory = [
+  R*cos(theta')+1*R ,  R*sin(theta') , 0*theta' ;
+  R*cos(theta')+3*R , -R*sin(theta') , 0*theta' ;
+  R*4               ,  0             , 0        ;
 %   R*cos(theta')+5*R ,  R*sin(theta') , 0*theta' ;
 %   R*6               ,  0             , 0        ;
-% ];
+];
 
 trajectory(:,3) = deg2rad(trajectory(:,3));
 
