@@ -19,13 +19,13 @@ const
   PI_DIVTAU = 1.5;
   PI_VDEAD = 1.0;
   PI_VOK   = 1.5;
-  PD_KP_X  = 1.0;
-  PD_KP_Y  = 1.0;
-  PD_KP_TH = 1.0;
-  PD_TAU_X  = 0.129073;
-  PD_TAU_Y  = 0.128070;
-  PD_TAU_TH = 0.099488;
-  PD_TSETT = 0.8;
+  PD_KP_X  = 1.019649723;
+  PD_KP_Y  = 1.031417953;
+  PD_KP_TH = 0.978734897;
+  PD_TAU_X  = 0.121202798;
+  PD_TAU_Y  = 0.105652003;
+  PD_TAU_TH = 0.090826489;
+  PD_TSETT = 0.7;
   // Trajectory (DO NOT CHANGE THIS PARAMETERS)
   NFUTURE = 10;
   GOAL_TOL_XY = 0.05; // meters

@@ -82,13 +82,13 @@
     <cell r="26" c="3" text="(vn):" />
     <cell r="26" c="4" text="(w):" />
     <cell r="27" c="1" text="kp:" />
-    <cell r="27" c="2" text="1" />
-    <cell r="27" c="3" text="1" />
-    <cell r="27" c="4" text="1" />
+    <cell r="27" c="2" text="1.019649723" />
+    <cell r="27" c="3" text="1.031417953" />
+    <cell r="27" c="4" text="0.978734897" />
     <cell r="28" c="1" text="tau(s):" />
-    <cell r="28" c="2" text="0.129073" />
-    <cell r="28" c="3" text="0.12807" />
-    <cell r="28" c="4" text="0.099488" />
+    <cell r="28" c="2" text="0.121202798" />
+    <cell r="28" c="3" text="0.105652003" />
+    <cell r="28" c="4" text="0.090826489" />
     <cell r="29" c="5" text="(Re):" />
     <cell r="29" c="6" text="(Im):" />
     <cell r="30" c="1" text="Tsett(s):" />
@@ -105,56 +105,56 @@
     <cell r="31" c="4" text="poles:" />
     <cell r="32" c="2" text="(v):" />
     <cell r="32" c="3" text="(vn):" />
-    <cell r="30" c="2" text="0.8" />
+    <cell r="30" c="2" text="0.7" />
     <cell r="30" c="4" text="Bessel:" />
     <cell r="30" c="5" text="-4.0530" />
     <cell r="30" c="6" text="2.3400" />
     <cell r="18" c="4" text="0.547956859752" />
     <cell r="19" c="4" text="0.208736119092" />
-    <cell r="33" c="6" text="34.2225140625" />
-    <cell r="34" c="6" text="10.1325" />
-    <cell r="33" c="2" text="4.41720255759" />
-    <cell r="34" c="2" text="0.0696893946987" />
-    <cell r="33" c="3" text="4.38287737598" />
-    <cell r="34" c="3" text="0.0679164050154" />
-    <cell r="33" c="4" text="3.40472947905" />
-    <cell r="34" c="4" text="0.00236792968417" />
-    <cell r="3" c="2" text="-0.00010605" />
-    <cell r="4" c="2" text="0.0018056" />
-    <cell r="5" c="2" text="-0.056905" />
-    <cell r="3" c="4" text="-0.0024136" />
-    <cell r="4" c="4" text="-0.0010766" />
-    <cell r="5" c="4" text="0.000024859" />
-    <cell r="3" c="6" text="-0.0024125" />
-    <cell r="4" c="6" text="-0.001079" />
-    <cell r="5" c="6" text="0.000024859" />
-    <cell r="7" c="2" text="0" />
-    <cell r="8" c="2" text="0" />
-    <cell r="9" c="2" text="-0.0027138" />
-    <cell r="10" c="2" text="-0.0014847" />
-    <cell r="11" c="2" text="0.36954" />
-    <cell r="12" c="2" text="0.6168" />
-    <cell r="7" c="3" text="0" />
-    <cell r="8" c="3" text="0" />
-    <cell r="9" c="3" text="0.0002197" />
-    <cell r="10" c="3" text="0.028805" />
-    <cell r="11" c="3" text="0.14917" />
-    <cell r="12" c="3" text="0.23123" />
-    <cell r="7" c="4" text="0" />
-    <cell r="8" c="4" text="0" />
-    <cell r="9" c="4" text="0.0024902" />
-    <cell r="10" c="4" text="-0.0099996" />
-    <cell r="11" c="4" text="1.1864" />
-    <cell r="12" c="4" text="1.9834" />
-    <cell r="23" c="2" text="-0.0016083" />
-    <cell r="23" c="4" text="0" />
-    <cell r="23" c="6" text="0" />
-    <cell r="24" c="2" text="0.024548" />
-    <cell r="24" c="4" text="0" />
-    <cell r="24" c="6" text="0" />
-    <cell r="25" c="2" text="0.066406" />
-    <cell r="25" c="4" text="0" />
-    <cell r="25" c="6" text="0" />
+    <cell r="33" c="6" text="44.6987938776" />
+    <cell r="34" c="6" text="11.58" />
+    <cell r="33" c="2" text="5.31321566905" />
+    <cell r="34" c="2" text="0.0744844569897" />
+    <cell r="33" c="3" text="4.57866482846" />
+    <cell r="34" c="3" text="0.0473159100918" />
+    <cell r="33" c="4" text="4.14804307364" />
+    <cell r="34" c="4" text="0.0127519342197" />
+    <cell r="3" c="2" text="0.0002744" />
+    <cell r="4" c="2" text="-0.000098432" />
+    <cell r="5" c="2" text="-0.029601" />
+    <cell r="3" c="4" text="-0.00072324" />
+    <cell r="4" c="4" text="0.00085332" />
+    <cell r="5" c="4" text="0.000037196" />
+    <cell r="3" c="6" text="-0.00072368" />
+    <cell r="4" c="6" text="0.00085294" />
+    <cell r="5" c="6" text="0.000037196" />
+    <cell r="7" c="2" text="-5" />
+    <cell r="8" c="2" text="-0.25566" />
+    <cell r="9" c="2" text="0.0029511" />
+    <cell r="10" c="2" text="0.47524" />
+    <cell r="11" c="2" text="0.055069" />
+    <cell r="12" c="2" text="-0.19527" />
+    <cell r="7" c="3" text="1" />
+    <cell r="8" c="3" text="0.051133" />
+    <cell r="9" c="3" text="0.0024786" />
+    <cell r="10" c="3" text="-0.10138" />
+    <cell r="11" c="3" text="0.49997" />
+    <cell r="12" c="3" text="0.89451" />
+    <cell r="7" c="4" text="-3" />
+    <cell r="8" c="4" text="-0.1534" />
+    <cell r="9" c="4" text="-0.00014335" />
+    <cell r="10" c="4" text="-0.55649" />
+    <cell r="11" c="4" text="-0.38108" />
+    <cell r="12" c="4" text="-0.29901" />
+    <cell r="23" c="2" text="0.00022757" />
+    <cell r="23" c="4" text="-0.000090336" />
+    <cell r="23" c="6" text="-0.0090336" />
+    <cell r="24" c="2" text="0.000027365" />
+    <cell r="24" c="4" text="0.000017385" />
+    <cell r="24" c="6" text="0.0017385" />
+    <cell r="25" c="2" text="-0.038311" />
+    <cell r="25" c="4" text="-0.017879" />
+    <cell r="25" c="6" text="-0.031204" />
     <cell r="1" c="8" text="[DEBUG]" />
     <cell r="1" c="9" text="On" />
     <cell r="2" c="8" text="[LogOnOff]" />
@@ -163,7 +163,7 @@
     <cell r="2" c="10" text="[LogSave]" />
     <cell r="4" c="8" text="[ChOnOff]" />
     <cell r="4" c="10" text="[ChType]" />
-    <cell r="4" c="9" text="On" />
+    <cell r="4" c="9" text="Off" />
     <cell r="4" c="12" text="[ChClear]" />
     <cell r="4" c="11" text="PosXY" />
     <cell r="7" c="8" text="[LoadTraj]" />

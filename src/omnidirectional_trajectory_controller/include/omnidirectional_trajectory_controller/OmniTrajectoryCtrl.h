@@ -15,19 +15,19 @@ const double kFreqPosCtrl = 25;
 const double kRobotWhD = 0.049283 * 2;  // diameter of the wheels (m)
 const double kRobotL   = 0.191367;      // distance between center - wheels (m)
 const double kMotEncRes = 12 * 1024;    // resolution of the encoders + gear
-const double kRobModelKpV  = 1;           // model V/Vn/W = f (v1, v2, v3)
-const double kRobModelKpVn = 1;
-const double kRobModelKpW  = 1;
-const double kRobModelTauV  = 0.129073;
-const double kRobModelTauVn = 0.128070;
-const double kRobModelTauW  = 0.099488;
-const double kPDCtrlTsett = 0.8;            // settling time desired for the PD
-const double kPDCtrlKcV  = 4.41720255759;   // PD ctrl gains
-const double kPDCtrlKcVn = 4.38287737598;
-const double kPDCtrlKcW  = 3.40472947905;
-const double kPDCtrlTdV  = 0.0696893946987;
-const double kPDCtrlTdVn = 0.0679164050154;
-const double kPDCtrlTdW  = 0.00236792968417;
+const double kRobModelKpV  = 1.019649723; // model V/Vn/W = f (v1, v2, v3)
+const double kRobModelKpVn = 1.031417953;
+const double kRobModelKpW  = 0.978734897;
+const double kRobModelTauV  = 0.121202798;
+const double kRobModelTauVn = 0.105652003;
+const double kRobModelTauW  = 0.090826489;
+const double kPDCtrlTsett = 0.7;            // settling time desired for the PD
+const double kPDCtrlKcV  = 5.31321566905;   // PD ctrl gains
+const double kPDCtrlKcVn = 4.57866482846;
+const double kPDCtrlKcW  = 4.14804307364;
+const double kPDCtrlTdV  = 0.0744844569897;
+const double kPDCtrlTdVn = 0.0473159100918;
+const double kPDCtrlTdW  = 0.0127519342197;
 // Trajectory
 const uint32_t kNFuture = 10;     // size of the buffer to compute the ff
 const double xXvel = 0.5;         // multiplying factor for the trajectory's vn
