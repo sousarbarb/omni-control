@@ -9,6 +9,8 @@
 
 #include "omnidirectional_trajectory_controller/LoadTrajectory.h"
 #include "omnidirectional_trajectory_controller/OmniTrajectoryCtrl.h"
+#include "omnidirectional_trajectory_controller/SetFutureSize.h"
+#include "omnidirectional_trajectory_controller/SetXvel.h"
 
 namespace omnidirectional_trajectory_controller {
 
@@ -22,6 +24,8 @@ class OmniTrajectoryCtrlROS {
   ros::Publisher pub_cmd_vel_;
   ros::Subscriber sub_odom_;
   ros::ServiceServer srv_load_trajectory;
+  ros::ServiceServer srv_set_future_size;
+  ros::ServiceServer srv_set_xvel;
 
   OmniTrajectoryCtrl *omni_ctrl_ = nullptr;
 
@@ -38,6 +42,12 @@ class OmniTrajectoryCtrlROS {
       omnidirectional_trajectory_controller::LoadTrajectory::Request &request,
       omnidirectional_trajectory_controller::LoadTrajectory::Response
           &response);
+  bool SrvSetFutureSize(
+      omnidirectional_trajectory_controller::SetFutureSize::Request &request,
+      omnidirectional_trajectory_controller::SetFutureSize::Response &response);
+  bool SrvSetXvel(
+      omnidirectional_trajectory_controller::SetXvel::Request &request,
+      omnidirectional_trajectory_controller::SetXvel::Response &response);
 };
 
 }

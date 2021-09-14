@@ -26,6 +26,12 @@ OmniTrajectoryCtrlROS::OmniTrajectoryCtrlROS()
   srv_load_trajectory = nh_.advertiseService(
       "load_trajectory",
       &OmniTrajectoryCtrlROS::SrvLoadTrajectory, this);
+  srv_set_future_size = nh_.advertiseService(
+      "set_future_size",
+      &OmniTrajectoryCtrlROS::SrvSetFutureSize, this);
+  srv_set_xvel = nh_.advertiseService(
+      "set_xvel",
+      &OmniTrajectoryCtrlROS::SrvSetXvel, this);
 
   // Debug
   ROS_INFO("[OMNI_CTRL] Node launched successfully launched.");
@@ -125,6 +131,18 @@ bool OmniTrajectoryCtrlROS::SrvLoadTrajectory(
     omnidirectional_trajectory_controller::LoadTrajectory::Request &request,
     omnidirectional_trajectory_controller::LoadTrajectory::Response &response) {
   return omni_ctrl_->LoadTrajectoryFile(request.filename);
+}
+
+bool OmniTrajectoryCtrlROS::SrvSetFutureSize(
+    omnidirectional_trajectory_controller::SetFutureSize::Request &request,
+    omnidirectional_trajectory_controller::SetFutureSize::Response &response) {
+  return omni_ctrl_->SetFutureSize(static_cast<uint32_t>(request.size));
+}
+
+bool OmniTrajectoryCtrlROS::SrvSetXvel(
+    omnidirectional_trajectory_controller::SetXvel::Request &request,
+    omnidirectional_trajectory_controller::SetXvel::Response &response) {
+  return omni_ctrl_->SetXvel(static_cast<double>(request.xvel));
 }
 
 }  // omnidirectional_trajectory_controller

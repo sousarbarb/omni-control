@@ -64,6 +64,8 @@ find_package(Eigen3 REQUIRED)
 add_service_files(
   FILES
   LoadTrajectory.srv
+  SetFutureSize.srv
+  SetXvel.srv
 )
 
 ## Generate actions in the 'action' folder

@@ -4,7 +4,9 @@
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 
-#define DEBUG_OMNITRAJECTORYCTRL
+//#define DEBUG_OMNITRAJECTORYCTRL
+#define SAVE_DATA_CSV \
+    "/home/sousarbarb/catkin_ws/log/5dpo_article/omnictrl_log_"
 
 namespace omnidirectional_trajectory_controller {
 
@@ -46,6 +48,7 @@ struct OmniTrajectoryCtrl {
   bool trajectory_on;
   uint32_t i_global;
   double t_global, u_ref;
+  std::string trajectory_filename;
   Eigen::MatrixX3d trajectory;
   Eigen::MatrixX3d future_buffer;
   Eigen::RowVector3d future_approx_coeff_1d, future_approx_coeff_2d;
@@ -57,6 +60,23 @@ struct OmniTrajectoryCtrl {
   double x_vel;
   Eigen::DiagonalMatrix<double, 3> pd_kc, pd_td;
   Eigen::DiagonalMatrix<double, 3> model_1_kp, model_tau_kp;
+
+#ifdef SAVE_DATA_CSV
+  // History
+  int index_data = 0;
+  std::vector<double> t_global_vec;
+  std::vector<bool> trajectory_on_vec;
+  std::vector<Eigen::Vector3d> rob_v_vec, rob_v_r_vec,
+                               rob_v_r_pd_vec, rob_v_r_ff_vec;
+  std::vector<Eigen::Vector3d> rob_p_loc_vec, rob_p_loc_r_vec,
+                               rob_p_loc_e_vec, rob_p_loc_ederiv_vec,
+                               rob_p_loc_r_1d_vec, rob_p_loc_r_2d_vec;
+  std::vector<Eigen::Vector3d> rob_p_vec, rob_p_r_vec,
+                               rob_p_r_1d_vec, rob_p_r_2d_vec;
+  std::vector<double> x_vel_vec;
+  std::vector<uint32_t> i_global_vec;
+  std::vector<double> u_ref_vec;
+#endif
 
 public:
   explicit OmniTrajectoryCtrl(
@@ -73,6 +93,8 @@ public:
                    double rob_v_v, double rob_v_vn, double rob_v_w);
   void UpdateRobotPosition(double rob_p_x, double rob_p_y , double rob_p_th);
   void UpdateRobotVelocity(double rob_v_v, double rob_v_vn, double rob_v_w);
+  bool SetFutureSize(uint32_t future_buffer_size);
+  bool SetXvel(double xvel);
 
  private:
   void InitializeBuffers(uint32_t &index_0);
@@ -83,6 +105,12 @@ public:
   void RobotPosPDControllers();
   void RotGlobal2Local(Eigen::Vector3d &x_global, Eigen::Vector3d &x_local);
   void SetPositionControllerFFReferences();
+
+#ifdef SAVE_DATA_CSV
+    void ClearHistory();
+    void SaveHistory();
+    void UpdateHistory();
+#endif
 };
 
 }

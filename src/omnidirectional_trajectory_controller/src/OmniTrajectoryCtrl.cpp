@@ -157,6 +157,15 @@ bool OmniTrajectoryCtrl::LoadTrajectoryFile(std::string &filename) {
     u_ref = 0;
     InitializeBuffers(i_global);
 
+    // Update filename
+    trajectory_filename = filename;
+    ROS_INFO("Trajectory loaded (filename: %s)", trajectory_filename.c_str());
+
+#ifdef SAVE_DATA_CSV
+    // Clear history
+    ClearHistory();
+#endif
+
   // - file does not exists
   } else {
     file.close();
@@ -167,9 +176,15 @@ bool OmniTrajectoryCtrl::LoadTrajectoryFile(std::string &filename) {
 void OmniTrajectoryCtrl::OmniRobotCtrl(double &v_r, double &vn_r,
                                        double &w_r) {
   // Check goal
-  if (trajectory_on)
-    if (IsGoalReached() && (i_global >= trajectory.rows()))
+  if (trajectory_on) {
+    if (IsGoalReached() && (i_global >= trajectory.rows())) {
       trajectory_on = false;
+
+#ifdef SAVE_DATA_CSV
+      SaveHistory();
+#endif
+    }
+  }
 
   // Set position references
   if (trajectory_on)
@@ -182,6 +197,12 @@ void OmniTrajectoryCtrl::OmniRobotCtrl(double &v_r, double &vn_r,
   v_r  = rob_v_r(0);
   vn_r = rob_v_r(1);
   w_r  = rob_v_r(2);
+
+#ifdef SAVE_DATA_CSV
+  // Update history (only when following a trajectory)
+  if (trajectory_on)
+    UpdateHistory();
+#endif
 }
 
 void OmniTrajectoryCtrl::Reset() {
@@ -232,6 +253,38 @@ void OmniTrajectoryCtrl::UpdateRobotVelocity(double rob_v_v, double rob_v_vn,
   rob_v(0) = rob_v_v;
   rob_v(1) = rob_v_vn;
   rob_v(2) = rob_v_w;
+}
+
+bool OmniTrajectoryCtrl::SetFutureSize(uint32_t future_buffer_size) {
+  // Successful update
+  if (!trajectory_on) {
+    InitializeL2Matrices(future_buffer_size);
+    ROS_INFO("Future size updated (size: %u)", future_buffer_size);
+
+    return true;
+
+  // Unsuccessful update of the future buffer's size
+  } else {
+    ROS_ERROR("Future size NOT UPDATED (size: %u)", future_buffer_size);
+
+    return false;
+  }
+}
+
+bool OmniTrajectoryCtrl::SetXvel(double xvel) {
+  // Successful update
+  if (!trajectory_on) {
+    x_vel = xvel;
+    ROS_ERROR("Xvel updated (size: %f)", x_vel);
+
+    return true;
+
+  // Unsuccessful update of xvel
+  } else {
+    ROS_ERROR("Xvel NOT UPDATED (size: %f)", x_vel);
+
+    return false;
+  }
 }
 
 
@@ -449,5 +502,139 @@ void OmniTrajectoryCtrl::SetPositionControllerFFReferences() {
   rob_p_r_2d = future_approx_coeff_2d.transpose();
   rob_p_r_2d = rob_p_r_2d * x_vel * kFreqPosCtrl;
 }
+
+#ifdef SAVE_DATA_CSV
+
+void OmniTrajectoryCtrl::ClearHistory() {
+  t_global_vec.clear();
+  trajectory_on_vec.clear();
+  rob_v_vec.clear();
+  rob_v_r_vec.clear();
+  rob_v_r_pd_vec.clear();
+  rob_v_r_ff_vec.clear();
+  rob_p_loc_vec.clear();
+  rob_p_loc_r_vec.clear();
+  rob_p_loc_e_vec.clear();
+  rob_p_loc_ederiv_vec.clear();
+  rob_p_loc_r_1d_vec.clear();
+  rob_p_loc_r_2d_vec.clear();
+  rob_p_vec.clear();
+  rob_p_r_vec.clear();
+  rob_p_r_1d_vec.clear();
+  rob_p_r_2d_vec.clear();
+  x_vel_vec.clear();
+  i_global_vec.clear();
+  u_ref_vec.clear();
+}
+
+void OmniTrajectoryCtrl::SaveHistory() {
+  std::ostringstream filename;
+  filename << SAVE_DATA_CSV << index_data << ".csv";
+
+  std::ofstream file;
+  file.open(filename.str(), std::ios::out | std::ios::trunc);
+
+  // Metadata
+  file << "Tctrl:," << kFreqPosCtrl << "," << std::endl;
+  file << std::endl;
+  file << "ROBOT:,(v),(vn),(w)," << std::endl;
+  file << "kp:," << kRobModelKpV << "," << kRobModelKpVn << ","
+                 << kRobModelKpW << "," << std::endl;
+  file << "tau:," << kRobModelTauV << "," << kRobModelTauVn << ","
+                  << kRobModelTauW << "," << std::endl;
+  file << "kc:," << pd_kc.diagonal()(0) << "," << pd_kc.diagonal()(1) << ","
+                 << pd_kc.diagonal()(2) << "," << std::endl;
+  file << "td:," << pd_td.diagonal()(0) << "," << pd_td.diagonal()(1) << ","
+                 << pd_td.diagonal()(2) << "," << std::endl;
+  file << std::endl;
+  file << "Filename:,Nfuture:," << std::endl;
+  file << trajectory_filename << "," << future_buffer.rows() << ","
+       << std::endl << std::endl;
+
+  // Header
+  file << "time (s),traj (bool),"
+       << "v_rob (m/s),vn_rob (m/s),w_rob (rad/s),"
+       << "v_r_rob (m/s),vn_r_rob (m/s),w_r_rob (rad/s),"
+       << "v_pd_r_rob (m/s),vn_pd_r_rob (m/s),w_pd_r_rob (rad/s),"
+       << "v_ff_r_rob (m/s),vn_ff_r_rob (m/s),w_ff_r_rob (rad/s),"
+       << "px_loc (m),py_loc (m),pth_loc (rad),"
+       << "px_r_loc (m),py_r_loc (m),pth_r_loc (rad),"
+       << "px_e_loc (m),py_e_loc (m),pth_e_loc (rad),"
+       << "px_e_1deriv_loc,py_e_1deriv_loc,pth_e_1deriv_loc,"
+       << "px_r_1deriv_loc,py_r_1deriv_loc,pth_r_1deriv_loc,"
+       << "px_r_2deriv_loc,py_r_2deriv_loc,pth_r_2deriv_loc,"
+       << "px (m),py (m),pth (rad),px_r (m),py_r (m),pth_r (rad),"
+       << "px_r_1deriv,py_r_1deriv,pth_r_1deriv,"
+       << "px_r_2deriv,py_r_2deriv,pth_r_2deriv,"
+       << "xvel,i_global,u_ref,";
+
+  // Data
+  for (size_t i = 0; i < t_global_vec.size(); i++) {
+    file << t_global_vec[i] << ","
+         << trajectory_on_vec[i] << ","
+         << rob_v_vec[i](0) << "," << rob_v_vec[i](1) << ","
+         << rob_v_vec[i](2) << ","
+         << rob_v_r_vec[i](0) << "," << rob_v_r_vec[i](1) << ","
+         << rob_v_r_vec[i](2) << ","
+         << rob_v_r_pd_vec[i](0) << "," << rob_v_r_pd_vec[i](1) << ","
+         << rob_v_r_pd_vec[i](2) << ","
+         << rob_v_r_ff_vec[i](0) << "," << rob_v_r_ff_vec[i](1) << ","
+         << rob_v_r_ff_vec[i](2) << ","
+         << rob_p_loc_vec[i](0) << "," << rob_p_loc_vec[i](1) << ","
+         << rob_p_loc_vec[i](2) << ","
+         << rob_p_loc_r_vec[i](0) << "," << rob_p_loc_r_vec[i](1) << ","
+         << rob_p_loc_r_vec[i](2) << ","
+         << rob_p_loc_e_vec[i](0) << "," << rob_p_loc_e_vec[i](1) << ","
+         << rob_p_loc_e_vec[i](2) << ","
+         << rob_p_loc_ederiv_vec[i](0) <<","<< rob_p_loc_ederiv_vec[i](1) << ","
+         << rob_p_loc_ederiv_vec[i](2) <<","
+         << rob_p_loc_r_1d_vec[i](0) << "," << rob_p_loc_r_1d_vec[i](1) << ","
+         << rob_p_loc_r_1d_vec[i](2) << ","
+         << rob_p_loc_r_2d_vec[i](0) << "," << rob_p_loc_r_2d_vec[i](1) << ","
+         << rob_p_loc_r_2d_vec[i](2) << ","
+         << rob_p_vec[i](0) << "," << rob_p_vec[i](1) << ","
+         << rob_p_vec[i](2) << ","
+         << rob_p_r_vec[i](0) << "," << rob_p_r_vec[i](1) << ","
+         << rob_p_r_vec[i](2) << ","
+         << rob_p_r_1d_vec[i](0) << "," << rob_p_r_1d_vec[i](1) << ","
+         << rob_p_r_1d_vec[i](2) << ","
+         << rob_p_r_2d_vec[i](0) << "," << rob_p_r_2d_vec[i](1) << ","
+         << rob_p_r_2d_vec[i](2) << ","
+         << x_vel_vec[i] << ","
+         << i_global_vec[i] << ","
+         << u_ref_vec[i] << ","
+         << std::endl;
+  }
+
+  // Save file
+  file.close();
+
+  // Update index of data (to not overwrite files on top of each other)
+  index_data++;
+}
+
+void OmniTrajectoryCtrl::UpdateHistory() {
+  t_global_vec.push_back(t_global);
+  trajectory_on_vec.push_back(trajectory_on);
+  rob_v_vec.push_back(rob_v);
+  rob_v_r_vec.push_back(rob_v_r);
+  rob_v_r_pd_vec.push_back(rob_v_r_pd);
+  rob_v_r_ff_vec.push_back(rob_v_r_ff);
+  rob_p_loc_vec.push_back(rob_p_loc);
+  rob_p_loc_r_vec.push_back(rob_p_loc_r);
+  rob_p_loc_e_vec.push_back(rob_p_loc_e);
+  rob_p_loc_ederiv_vec.push_back(rob_p_loc_ederiv);
+  rob_p_loc_r_1d_vec.push_back(rob_p_loc_r_1d);
+  rob_p_loc_r_2d_vec.push_back(rob_p_loc_r_2d);
+  rob_p_vec.push_back(rob_p);
+  rob_p_r_vec.push_back(rob_p_r);
+  rob_p_r_1d_vec.push_back(rob_p_r_1d);
+  rob_p_r_2d_vec.push_back(rob_p_r_2d);
+  x_vel_vec.push_back(x_vel);
+  i_global_vec.push_back(i_global);
+  u_ref_vec.push_back(u_ref);
+}
+
+#endif
 
 }  // omnidirectional_trajectory_controller
