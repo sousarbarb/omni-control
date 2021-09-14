@@ -119,53 +119,53 @@
     <cell r="34" c="3" text="0.0679164050154" />
     <cell r="33" c="4" text="3.40472947905" />
     <cell r="34" c="4" text="0.00236792968417" />
-    <cell r="3" c="2" text="-0.00036604" />
-    <cell r="4" c="2" text="0.00010951" />
-    <cell r="5" c="2" text="-0.11703" />
-    <cell r="3" c="4" text="-0.00034851" />
-    <cell r="4" c="4" text="-0.00058704" />
-    <cell r="5" c="4" text="-0.00053885" />
-    <cell r="3" c="6" text="-0.00034731" />
-    <cell r="4" c="6" text="-0.00058775" />
-    <cell r="5" c="6" text="-0.00053885" />
-    <cell r="7" c="2" text="-4" />
-    <cell r="8" c="2" text="-0.20453" />
-    <cell r="9" c="2" text="-0.013172" />
-    <cell r="10" c="2" text="-0.28615" />
-    <cell r="11" c="2" text="0.90024" />
-    <cell r="12" c="2" text="1.6732" />
-    <cell r="7" c="3" text="1" />
-    <cell r="8" c="3" text="0.051133" />
-    <cell r="9" c="3" text="-0.0021397" />
-    <cell r="10" c="3" text="0.39646" />
-    <cell r="11" c="3" text="-0.075393" />
-    <cell r="12" c="3" text="-0.36512" />
-    <cell r="7" c="4" text="1" />
-    <cell r="8" c="4" text="0.051133" />
-    <cell r="9" c="4" text="0.002981" />
-    <cell r="10" c="4" text="0.011948" />
-    <cell r="11" c="4" text="0.8939" />
-    <cell r="12" c="4" text="1.4826" />
-    <cell r="23" c="2" text="0.15938" />
-    <cell r="23" c="4" text="-0.00007528" />
-    <cell r="23" c="6" text="-0.007528" />
-    <cell r="24" c="2" text="-0.016977" />
-    <cell r="24" c="4" text="-0.000043463" />
-    <cell r="24" c="6" text="-0.0043463" />
-    <cell r="25" c="2" text="0.21965" />
-    <cell r="25" c="4" text="-0.0051082" />
-    <cell r="25" c="6" text="-0.0089154" />
+    <cell r="3" c="2" text="-0.00010605" />
+    <cell r="4" c="2" text="0.0018056" />
+    <cell r="5" c="2" text="-0.056905" />
+    <cell r="3" c="4" text="-0.0024136" />
+    <cell r="4" c="4" text="-0.0010766" />
+    <cell r="5" c="4" text="0.000024859" />
+    <cell r="3" c="6" text="-0.0024125" />
+    <cell r="4" c="6" text="-0.001079" />
+    <cell r="5" c="6" text="0.000024859" />
+    <cell r="7" c="2" text="0" />
+    <cell r="8" c="2" text="0" />
+    <cell r="9" c="2" text="-0.0027138" />
+    <cell r="10" c="2" text="-0.0014847" />
+    <cell r="11" c="2" text="0.36954" />
+    <cell r="12" c="2" text="0.6168" />
+    <cell r="7" c="3" text="0" />
+    <cell r="8" c="3" text="0" />
+    <cell r="9" c="3" text="0.0002197" />
+    <cell r="10" c="3" text="0.028805" />
+    <cell r="11" c="3" text="0.14917" />
+    <cell r="12" c="3" text="0.23123" />
+    <cell r="7" c="4" text="0" />
+    <cell r="8" c="4" text="0" />
+    <cell r="9" c="4" text="0.0024902" />
+    <cell r="10" c="4" text="-0.0099996" />
+    <cell r="11" c="4" text="1.1864" />
+    <cell r="12" c="4" text="1.9834" />
+    <cell r="23" c="2" text="-0.0016083" />
+    <cell r="23" c="4" text="0" />
+    <cell r="23" c="6" text="0" />
+    <cell r="24" c="2" text="0.024548" />
+    <cell r="24" c="4" text="0" />
+    <cell r="24" c="6" text="0" />
+    <cell r="25" c="2" text="0.066406" />
+    <cell r="25" c="4" text="0" />
+    <cell r="25" c="6" text="0" />
     <cell r="1" c="8" text="[DEBUG]" />
     <cell r="1" c="9" text="On" />
     <cell r="2" c="8" text="[LogOnOff]" />
     <cell r="2" c="9" text="Off" />
-    <cell r="2" c="11" text="example" />
+    <cell r="2" c="11" text="exampleasdfa" />
     <cell r="2" c="10" text="[LogSave]" />
     <cell r="4" c="8" text="[ChOnOff]" />
     <cell r="4" c="10" text="[ChType]" />
-    <cell r="4" c="9" text="Off" />
+    <cell r="4" c="9" text="On" />
     <cell r="4" c="12" text="[ChClear]" />
-    <cell r="4" c="11" text="PosTime" />
+    <cell r="4" c="11" text="PosXY" />
     <cell r="7" c="8" text="[LoadTraj]" />
     <cell r="1" c="11" text="Filename:" />
     <cell r="6" c="9" text="Filename:" />
@@ -173,9 +173,9 @@
     <cell r="8" c="9" text="On" />
     <cell r="8" c="10" text="[GT/ODO]" />
     <cell r="8" c="11" text="sim2" />
-    <cell r="7" c="9" text="square-th_vn-1.0" />
+    <cell r="7" c="9" text="8_vn-1.0_r-1.0" />
     <cell r="6" c="10" text="#points:" />
-    <cell r="7" c="10" text="245" />
+    <cell r="7" c="10" text="356" />
     <cell r="1" c="3" text="[RESET]" />
     <cell r="9" c="9" text="x (m):" />
     <cell r="9" c="10" text="y (m):" />
@@ -235,5 +235,26 @@
     <cell r="11" c="11" text="0" />
     <cell r="6" c="12" text="state:" />
     <cell r="7" c="12" text="END..." />
+    <cell r="2" c="12" text="Saved in log/exampleasdfa.csv" />
+    <cell r="23" c="8" text="(10):" />
+    <cell r="24" c="8" text="(11):" />
+    <cell r="25" c="8" text="(12):" />
+    <cell r="26" c="8" text="(13):" />
+    <cell r="27" c="8" text="(14):" />
+    <cell r="23" c="9" text="3" />
+    <cell r="24" c="9" text="3" />
+    <cell r="25" c="9" text="3" />
+    <cell r="26" c="9" text="3" />
+    <cell r="27" c="9" text="3" />
+    <cell r="23" c="10" text="0" />
+    <cell r="24" c="10" text="0" />
+    <cell r="25" c="10" text="0" />
+    <cell r="26" c="10" text="0" />
+    <cell r="27" c="10" text="0" />
+    <cell r="23" c="11" text="0" />
+    <cell r="24" c="11" text="0" />
+    <cell r="25" c="11" text="0" />
+    <cell r="26" c="11" text="0" />
+    <cell r="27" c="11" text="0" />
   </cells>
 </sheet>
