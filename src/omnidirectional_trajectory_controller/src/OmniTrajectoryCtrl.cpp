@@ -275,7 +275,7 @@ bool OmniTrajectoryCtrl::SetXvel(double xvel) {
   // Successful update
   if (!trajectory_on) {
     x_vel = xvel;
-    ROS_ERROR("Xvel updated (size: %f)", x_vel);
+    ROS_INFO("Xvel updated (size: %f)", x_vel);
 
     return true;
 
