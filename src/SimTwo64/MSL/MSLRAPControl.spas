@@ -17,8 +17,8 @@ const
   PI_TAU = 0.208736119092;
   PI_LAG = 0.00;
   PI_DIVTAU = 1.5;
-  PI_VDEAD = 1.0;
-  PI_VOK   = 1.5;
+  PI_VDEAD = 0.58635;
+  PI_VOK   = 1.46588;
   PD_KP_X  = 1.019649723;
   PD_KP_Y  = 1.031417953;
   PD_KP_TH = 0.978734897;
@@ -27,10 +27,10 @@ const
   PD_TAU_TH = 0.090826489;
   PD_TSETT = 0.7;
   // Trajectory (DO NOT CHANGE THIS PARAMETERS)
-  NFUTURE = 10;
+  NFUTURE = 24;
   GOAL_TOL_XY = 0.05; // meters
   GOAL_TOL_TH = 2.5;  // degrees
-  XVEL = 1;
+  XVEL = 1.0;
 
 
 
@@ -919,7 +919,7 @@ begin
   string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_r_1deriv[1]           , robp_r_1deriv[2]           , robp_r_1deriv[3]           ]);
   string_log := string_log + Format('%.12g,%.12g,%.12g,',[ robp_r_2deriv[1]           , robp_r_2deriv[2]           , robp_r_2deriv[3]           ]);
   if (trajectory_on) then begin
-    string_log := string_log + Format('%.12g,%d,%.12g,',[ 1 , i_global , u_ref ]);
+    string_log := string_log + Format('%.12g,%d,%.12g,',[ XVEL , i_global , u_ref ]);
   end;
   Log.Add(string_log);
 end;
@@ -1036,13 +1036,13 @@ begin
 
   // Log 
   // - add data to TStringList
-  if (log_on) then begin
+  if ((log_on) AND (trajectory_on)) then begin
     UpdateLog;
   end;
   // - save button was pressed by the user
   if ((RCButtonPressed(2,10)) AND (Log <> nil)) then begin
     SetRCValue(2,12,'Saved in log/' + GetRCText(2,11) + '.csv');
-    Log.SaveToFile('log/omnictrl_' + GetRCText(2,11) + '.csv' );
+    Log.SaveToFile('log/' + GetRCText(2,11) + '.csv' );
   end;
 end;
 
