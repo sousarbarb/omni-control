@@ -178,6 +178,11 @@ void OmniTrajectoryCtrl::OmniRobotCtrl(double &v_r, double &vn_r,
   // Check goal
   if (trajectory_on) {
     if (IsGoalReached() && (i_global >= trajectory.rows())) {
+      ROS_INFO("Goal (x, y, th = %f, %f, %f) reached!",
+               trajectory.row(trajectory.rows()-1)(0),
+               trajectory.row(trajectory.rows()-1)(1),
+               DEGREES(trajectory.row(trajectory.rows()-1)(2)));
+
       trajectory_on = false;
 
 #ifdef SAVE_DATA_CSV
@@ -185,6 +190,11 @@ void OmniTrajectoryCtrl::OmniRobotCtrl(double &v_r, double &vn_r,
 #endif
     }
   }
+
+#ifdef  ANALYZE_PROCESSING_TIME
+  // Start high resolution clock
+  auto t_start = std::chrono::high_resolution_clock::now();
+#endif
 
   // Set position references
   if (trajectory_on)
@@ -197,6 +207,21 @@ void OmniTrajectoryCtrl::OmniRobotCtrl(double &v_r, double &vn_r,
   v_r  = rob_v_r(0);
   vn_r = rob_v_r(1);
   w_r  = rob_v_r(2);
+
+#ifdef ANALYZE_PROCESSING_TIME
+  // Stop high resolution clock
+  auto t_stop = std::chrono::high_resolution_clock::now();
+
+  // Compute processing time in milliseconds
+  std::chrono::duration<double, std::milli> t_processing_time =
+      t_stop - t_start;
+
+  // Save processing time
+  if (time_analyze) {
+    time_trajectory_on_vec.push_back(trajectory_on);
+    time_processing_vec.push_back(t_processing_time.count());
+  }
+#endif
 
 #ifdef SAVE_DATA_CSV
   // Update history (only when following a trajectory)
@@ -275,17 +300,37 @@ bool OmniTrajectoryCtrl::SetXvel(double xvel) {
   // Successful update
   if (!trajectory_on) {
     x_vel = xvel;
-    ROS_INFO("Xvel updated (size: %f)", x_vel);
+    ROS_INFO("Xvel updated (value: %f)", x_vel);
 
     return true;
 
   // Unsuccessful update of xvel
   } else {
-    ROS_ERROR("Xvel NOT UPDATED (size: %f)", x_vel);
+    ROS_ERROR("Xvel NOT UPDATED (value: %f)", x_vel);
 
     return false;
   }
 }
+
+#ifdef ANALYZE_PROCESSING_TIME
+
+bool OmniTrajectoryCtrl::SetAnalyzeTime() {
+  if (!time_analyze) {
+    ROS_INFO("Started analysis of processing time");
+
+    time_analyze = true;
+  } else {
+    ROS_INFO("Finished analysis of processing time");
+
+    SaveTimeProcessingAnalysis();
+
+    time_analyze = false;
+  }
+
+  return  true;
+}
+
+#endif
 
 
 
@@ -633,6 +678,39 @@ void OmniTrajectoryCtrl::UpdateHistory() {
   x_vel_vec.push_back(x_vel);
   i_global_vec.push_back(i_global);
   u_ref_vec.push_back(u_ref);
+}
+
+#endif
+
+#ifdef ANALYZE_PROCESSING_TIME
+
+void OmniTrajectoryCtrl::SaveTimeProcessingAnalysis() {
+  std::ostringstream filename;
+  filename << ANALYZE_PROCESSING_TIME << future_buffer.rows() << ".csv";
+
+  std::ofstream file;
+  file.open(filename.str(), std::ios::out | std::ios::trunc);
+
+  // Metadata
+  file << "Nfuture:," << std::endl;
+  file << future_buffer.rows() << "," << std::endl << std::endl;
+
+  // Header
+  file << "traj (bool),delta_time (ms)," << std::endl;
+
+  // Data
+  for (size_t i = 0; i < time_trajectory_on_vec.size(); i++) {
+    file << time_trajectory_on_vec[i] << ","
+         << time_processing_vec[i] << ","
+         << std::endl;
+  }
+
+  // Save file
+  file.close();
+
+  // Clear vectors
+  time_trajectory_on_vec.clear();
+  time_processing_vec.clear();
 }
 
 #endif

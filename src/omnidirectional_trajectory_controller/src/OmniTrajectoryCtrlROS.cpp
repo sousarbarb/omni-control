@@ -33,6 +33,12 @@ OmniTrajectoryCtrlROS::OmniTrajectoryCtrlROS()
       "set_xvel",
       &OmniTrajectoryCtrlROS::SrvSetXvel, this);
 
+#ifdef ANALYZE_PROCESSING_TIME
+  srv_analyze_time = nh_.advertiseService(
+      "set_analyze_time",
+      &OmniTrajectoryCtrlROS::SrvAnalyzeTime, this);
+#endif
+
   // Debug
   ROS_INFO("[OMNI_CTRL] Node launched successfully launched.");
 }
@@ -73,7 +79,7 @@ bool OmniTrajectoryCtrlROS::ReadParameters() {
 
   // Update OmniTrajectoryCtrl object
   omni_ctrl_ = new OmniTrajectoryCtrl(
-      kNFuture, kGoalTolXY, kGoalTolTh, xXvel,
+      kNFuture, kGoalTolXY, RADIANS(kGoalTolTh), xXvel,
       kPDCtrlKcV, kPDCtrlKcVn, kPDCtrlKcW, kPDCtrlTdV, kPDCtrlTdVn, kPDCtrlTdW,
       kRobModelKpV , kRobModelKpVn , kRobModelKpW,
       kRobModelTauV, kRobModelTauVn, kRobModelTauW);
@@ -144,5 +150,15 @@ bool OmniTrajectoryCtrlROS::SrvSetXvel(
     omnidirectional_trajectory_controller::SetXvel::Response &response) {
   return omni_ctrl_->SetXvel(static_cast<double>(request.xvel));
 }
+
+#ifdef ANALYZE_PROCESSING_TIME
+
+bool OmniTrajectoryCtrlROS::SrvAnalyzeTime(
+    std_srvs::Trigger::Request &request,
+    std_srvs::Trigger::Response &response) {
+  return omni_ctrl_->SetAnalyzeTime();
+}
+
+#endif
 
 }  // omnidirectional_trajectory_controller

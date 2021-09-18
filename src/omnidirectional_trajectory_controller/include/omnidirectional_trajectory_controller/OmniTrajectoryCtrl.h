@@ -1,12 +1,21 @@
 #ifndef SRC_OMNITRAJECTORYCTRL_H
 #define SRC_OMNITRAJECTORYCTRL_H
 
+//#define DEBUG_OMNITRAJECTORYCTRL
+//#define SAVE_DATA_CSV \
+//    "/home/sousarbarb/catkin_ws/log/5dpo_article/omnictrl_log_"
+#define ANALYZE_PROCESSING_TIME \
+    "/home/sousarbarb/catkin_ws/log/5dpo_article/omnictrl_time_"
+
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 
-//#define DEBUG_OMNITRAJECTORYCTRL
-#define SAVE_DATA_CSV \
-    "/home/sousarbarb/catkin_ws/log/5dpo_article/omnictrl_log_"
+#ifdef ANALYZE_PROCESSING_TIME
+#include <chrono>
+#endif
+
+#define DEGREES(x) x * 180 / M_PI
+#define RADIANS(x) x * M_PI / 180
 
 namespace omnidirectional_trajectory_controller {
 
@@ -78,6 +87,13 @@ struct OmniTrajectoryCtrl {
   std::vector<double> u_ref_vec;
 #endif
 
+#ifdef ANALYZE_PROCESSING_TIME
+  // Analyze processing time of the trajectory controller
+  bool time_analyze = false;
+  std::vector<double> time_processing_vec;
+  std::vector<bool> time_trajectory_on_vec;
+#endif
+
 public:
   explicit OmniTrajectoryCtrl(
       uint32_t future_buffer_size, double tol_goal_xy, double tol_goal_th,
@@ -96,6 +112,10 @@ public:
   bool SetFutureSize(uint32_t future_buffer_size);
   bool SetXvel(double xvel);
 
+#ifdef ANALYZE_PROCESSING_TIME
+  bool SetAnalyzeTime();
+#endif
+
  private:
   void InitializeBuffers(uint32_t &index_0);
   void InitializeL2Matrices(uint32_t future_buffer_size);
@@ -107,9 +127,13 @@ public:
   void SetPositionControllerFFReferences();
 
 #ifdef SAVE_DATA_CSV
-    void ClearHistory();
-    void SaveHistory();
-    void UpdateHistory();
+  void ClearHistory();
+  void SaveHistory();
+  void UpdateHistory();
+#endif
+
+#ifdef ANALYZE_PROCESSING_TIME
+  void SaveTimeProcessingAnalysis();
 #endif
 };
 

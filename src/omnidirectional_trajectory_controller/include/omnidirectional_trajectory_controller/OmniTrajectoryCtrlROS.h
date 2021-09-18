@@ -12,6 +12,10 @@
 #include "omnidirectional_trajectory_controller/SetFutureSize.h"
 #include "omnidirectional_trajectory_controller/SetXvel.h"
 
+#ifdef ANALYZE_PROCESSING_TIME
+#include <std_srvs/Trigger.h>
+#endif
+
 namespace omnidirectional_trajectory_controller {
 
 class OmniTrajectoryCtrlROS {
@@ -26,6 +30,9 @@ class OmniTrajectoryCtrlROS {
   ros::ServiceServer srv_load_trajectory;
   ros::ServiceServer srv_set_future_size;
   ros::ServiceServer srv_set_xvel;
+#ifdef ANALYZE_PROCESSING_TIME
+  ros::ServiceServer srv_analyze_time;
+#endif
 
   OmniTrajectoryCtrl *omni_ctrl_ = nullptr;
 
@@ -48,6 +55,12 @@ class OmniTrajectoryCtrlROS {
   bool SrvSetXvel(
       omnidirectional_trajectory_controller::SetXvel::Request &request,
       omnidirectional_trajectory_controller::SetXvel::Response &response);
+
+#ifdef ANALYZE_PROCESSING_TIME
+  bool SrvAnalyzeTime(
+      std_srvs::Trigger::Request &request,
+      std_srvs::Trigger::Response &response);
+#endif
 };
 
 }
