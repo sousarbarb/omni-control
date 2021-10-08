@@ -545,7 +545,7 @@ void OmniTrajectoryCtrl::SetPositionControllerFFReferences() {
   rob_p_r_1d = rob_p_r_1d * x_vel * kFreqPosCtrl;
   // - second derivative:
   rob_p_r_2d = future_approx_coeff_2d.transpose();
-  rob_p_r_2d = rob_p_r_2d * x_vel * kFreqPosCtrl;
+  rob_p_r_2d = rob_p_r_2d * x_vel * x_vel * kFreqPosCtrl;
 }
 
 #ifdef SAVE_DATA_CSV

@@ -634,9 +634,9 @@ begin
   robp_r_1deriv[1] := robp_r_1deriv[1] * XVEL / (Tscript*FREQDIVPOSCTRL);
   robp_r_1deriv[2] := robp_r_1deriv[2] * XVEL / (Tscript*FREQDIVPOSCTRL);
   robp_r_1deriv[3] := robp_r_1deriv[3] * XVEL / (Tscript*FREQDIVPOSCTRL);
-  robp_r_2deriv[1] := robp_r_2deriv[1] * XVEL / (Tscript*FREQDIVPOSCTRL);
-  robp_r_2deriv[2] := robp_r_2deriv[2] * XVEL / (Tscript*FREQDIVPOSCTRL);
-  robp_r_2deriv[3] := robp_r_2deriv[3] * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_2deriv[1] := robp_r_2deriv[1] * XVEL * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_2deriv[2] := robp_r_2deriv[2] * XVEL * XVEL / (Tscript*FREQDIVPOSCTRL);
+  robp_r_2deriv[3] := robp_r_2deriv[3] * XVEL * XVEL / (Tscript*FREQDIVPOSCTRL);
 
   // Debug
   if (debug_on) then begin
