@@ -193,6 +193,7 @@ filenames = [
   "8_r-1.0_1.0_7_gt.csv" ,   ...184
   "8_r-1.0_1.0_23_gt.csv" ,  ...185
   "8_r-1.0_1.0_24_gt.csv" ,  ...186
+  "sq-th_0.75_8_gt_noff.csv",...187
 ];
 num_files = length(filenames);
 
@@ -303,7 +304,7 @@ if (~isempty(ivisualize))
     figure
     colors = get(gca,'colororder');
 
-    subplot(1,2,1)
+    subplot(2,1,1)
     hold on
     plot( Time{ivisualize(i)} ,   Xpos{ivisualize(i)}(:,1) , '-'  , 'Color' , colors(1,:) )
     plot( Time{ivisualize(i)} , Xpos_r{ivisualize(i)}(:,1) , '--' , 'Color' , colors(1,:) )
@@ -316,14 +317,14 @@ if (~isempty(ivisualize))
     title_plot = title(sprintf("Trajectory (%s): X | Y (time)", filenames(ivisualize(i))));
     set(title_plot, 'Interpreter', 'none')
 
-    subplot(1,2,2)
+    subplot(2,1,2)
     hold on
     plot( Time{ivisualize(i)} , rad2deg(  Xpos{ivisualize(i)}(:,3)) , '-'  , 'Color' , colors(1,:) )
     plot( Time{ivisualize(i)} , rad2deg(Xpos_r{ivisualize(i)}(:,3)) , '--' , 'Color' , colors(1,:) )
     grid on
     xlabel('time (s) \rightarrow')
     ylabel('\theta (m) \rightarrow')
-    legend('\theta','x_r')
+    legend('\theta','\theta_r')
     title_plot = title(sprintf("Trajectory (%s): \theta (time)", filenames(ivisualize(i))));
     set(title_plot, 'Interpreter', 'none')
 
